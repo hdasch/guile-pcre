@@ -36,24 +36,24 @@ struct guile_pcre
 
 static SCM make_pcre(SCM pattern)
 {
-  SCM smob;
-  struct guile_pcre *regexp;
+    SCM smob;
+    struct guile_pcre *regexp;
 
-  regexp = (struct guile_pcre *) scm_gc_malloc(sizeof(*regexp), "pcre");
+    regexp = (struct guile_pcre *) scm_gc_malloc(sizeof(*regexp), "pcre");
 
-  if (regexp) {
-      int  error_code = 0;
-      const char *error_ptr = NULL;
-      int  error_offset = 0;
+    if (regexp) {
+	int  error_code = 0;
+	const char *error_ptr = NULL;
+	int  error_offset = 0;
 
-      regexp->pattern = pattern;
-      regexp->regexp = pcre_compile2(scm_to_locale_string(pattern), 0,
-				     &error_code, &error_ptr,
-				     &error_offset, NULL);
-  }
+	regexp->pattern = pattern;
+	regexp->regexp = pcre_compile2(scm_to_locale_string(pattern), 0,
+				       &error_code, &error_ptr,
+				       &error_offset, NULL);
+    }
 
-  SCM_NEWSMOB(smob, pcre_tag, regexp);
-  return smob;
+    SCM_NEWSMOB(smob, pcre_tag, regexp);
+    return smob;
 }
 
 static SCM pcre_error_to_string(int rc)
@@ -104,55 +104,55 @@ static SCM pcre_error_to_string(int rc)
 
 static SCM match_pcre(SCM pcre_smob, SCM string)
 {
-  struct guile_pcre *regexp;
-  SCM rv = SCM_BOOL_F;
-  int rc;
-  int capture_count = 0;
-  int *captures = NULL;
+    struct guile_pcre *regexp;
+    SCM rv = SCM_BOOL_F;
+    int rc;
+    int capture_count = 0;
+    int *captures = NULL;
 
-  scm_assert_smob_type(pcre_tag, pcre_smob);
+    scm_assert_smob_type(pcre_tag, pcre_smob);
 
-  regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
-  pcre_fullinfo(regexp->regexp, NULL, PCRE_INFO_CAPTURECOUNT, &capture_count);
-  capture_count += 3;
+    regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
+    pcre_fullinfo(regexp->regexp, NULL, PCRE_INFO_CAPTURECOUNT, &capture_count);
+    capture_count += 3;
   
-  if (capture_count)
-      captures = alloca(capture_count * 3 * sizeof(*captures));
-  memset(captures, 0, 3 * sizeof(*captures));
+    if (capture_count)
+	captures = alloca(capture_count * 3 * sizeof(*captures));
+    memset(captures, 0, 3 * sizeof(*captures));
 
-  rc = pcre_exec(regexp->regexp, NULL, scm_to_locale_string(string),
-		 scm_c_string_length(string), 0, 0, captures,
-		 capture_count);
-  if (rc < 0 && rc != PCRE_ERROR_NOMATCH) {
-      rv = pcre_error_to_string(rc);
-  } else if (rc > 0) {
-      int i;
+    rc = pcre_exec(regexp->regexp, NULL, scm_to_locale_string(string),
+		   scm_c_string_length(string), 0, 0, captures,
+		   capture_count);
+    if (rc < 0 && rc != PCRE_ERROR_NOMATCH) {
+	rv = pcre_error_to_string(rc);
+    } else if (rc > 0) {
+	int i;
 
-      rv = scm_c_make_vector(rc + 1, SCM_UNSPECIFIED);
-      scm_c_vector_set_x(rv, 0, string);
-      for (i = 0; i < rc; ++i) {
-      	  SCM start = scm_from_signed_integer(captures[i * 2]);
-      	  SCM len = scm_from_signed_integer(captures[i * 2 +1] - captures[i * 2]);
-      	  scm_c_vector_set_x(rv, i + 1, scm_cons(start, len));
-      }
-  }
+	rv = scm_c_make_vector(rc + 1, SCM_UNSPECIFIED);
+	scm_c_vector_set_x(rv, 0, string);
+	for (i = 0; i < rc; ++i) {
+	    SCM start = scm_from_signed_integer(captures[i * 2]);
+	    SCM len = scm_from_signed_integer(captures[i * 2 +1] - captures[i * 2]);
+	    scm_c_vector_set_x(rv, i + 1, scm_cons(start, len));
+	}
+    }
 
-  scm_remember_upto_here_1(pcre_smob);
+    scm_remember_upto_here_1(pcre_smob);
 
-  return rv;
+    return rv;
 }
 
 static int print_pcre(SCM pcre_smob, SCM port, scm_print_state *pstate)
 {
-  struct guile_pcre *regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
+    struct guile_pcre *regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
 
-  (void) pstate;
-  scm_puts("#<pcre ", port);
-  scm_display(regexp->pattern, port);
-  scm_puts(">", port);
+    (void) pstate;
+    scm_puts("#<pcre ", port);
+    scm_display(regexp->pattern, port);
+    scm_puts(">", port);
 
-  /* non-zero means success */
-  return 1;
+	    /* non-zero means success */
+    return 1;
 }
 
 static SCM mark_pcre(SCM pcre_smob)
@@ -174,11 +174,11 @@ static size_t free_pcre(SCM pcre_smob)
 
 void init_pcre(void)
 {
-  pcre_tag = scm_make_smob_type ("pcre", sizeof(struct guile_pcre));
-  scm_set_smob_print(pcre_tag, print_pcre);
-  scm_set_smob_mark(pcre_tag, mark_pcre);
-  scm_set_smob_free(pcre_tag, free_pcre);
+    pcre_tag = scm_make_smob_type ("pcre", sizeof(struct guile_pcre));
+    scm_set_smob_print(pcre_tag, print_pcre);
+    scm_set_smob_mark(pcre_tag, mark_pcre);
+    scm_set_smob_free(pcre_tag, free_pcre);
 
-  scm_c_define_gsubr("make-pcre", 1, 0, 0, make_pcre);
-  scm_c_define_gsubr("match-pcre", 2, 0, 0, match_pcre);
+    scm_c_define_gsubr("make-pcre", 1, 0, 0, make_pcre);
+    scm_c_define_gsubr("match-pcre", 2, 0, 0, match_pcre);
 }
