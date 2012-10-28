@@ -1,11 +1,12 @@
-CFLAGS = $(pkg-config guile-2.0 --cflags)
-LIBS   = $(pkg-config guile-2.0 --libs)
+CC = @CC@
+CFLAGS = @GUILE_CFLAGS@
+LIBS   = @GUILE_LIBS@
 
 CFLAGS += -Wall -Wextra -Werror
 CFLAGS += -fPIC
 CFLAGS += -g
 
-LDFLAGS += -lpcre -lguile $(LIBS)
+LDFLAGS += -lpcre $(LIBS)
 LDFLAGS += -g
 
 all: libguile-pcre.so
