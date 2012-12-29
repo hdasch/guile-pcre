@@ -1,0 +1,8 @@
+Temporary module/extension installation:
+
+prefix=${prefix:-~/local/}   # or "/usr"
+guile_dir=${prefix}/share/guile/2.2
+pwd=$(pwd)
+sudo mkdir -p ${guile_dir}/extensions
+(cd ${guile_dir}; sudo ln -s ${pwd}/guile-pcre.scm .)
+(cd ${guile_dir}/extensions; sudo ln -s ${pwd}/libguile-pcre.so .)

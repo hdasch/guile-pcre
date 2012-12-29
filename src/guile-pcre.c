@@ -181,4 +181,5 @@ void init_pcre(void)
 
     scm_c_define_gsubr("make-pcre", 1, 0, 0, make_pcre);
     scm_c_define_gsubr("match-pcre", 2, 0, 0, match_pcre);
+    pcre_malloc = scm_malloc;
 }
