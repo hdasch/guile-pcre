@@ -7,6 +7,6 @@
 ;(format #t "~a\n" (match-pcre (make-pcre "abc") "123abc456"))
 
 (define-module (guile-pcre)
-  #:export (make-pcre match-pcre))
+  #:export (make-pcre pcre-exec))
 
 (load-extension "libguile-pcre" "init_pcre")

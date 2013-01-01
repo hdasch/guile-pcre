@@ -102,7 +102,7 @@ static SCM pcre_error_to_string(int rc)
     return scm_from_locale_string(error_buffer);
 }
 
-static SCM match_pcre(SCM pcre_smob, SCM string)
+static SCM pcre_execute(SCM pcre_smob, SCM string)
 {
     struct guile_pcre *regexp;
     SCM rv = SCM_BOOL_F;
@@ -180,6 +180,6 @@ void init_pcre(void)
     scm_set_smob_free(pcre_tag, free_pcre);
 
     scm_c_define_gsubr("make-pcre", 1, 0, 0, make_pcre);
-    scm_c_define_gsubr("match-pcre", 2, 0, 0, match_pcre);
+    scm_c_define_gsubr("pcre-exec", 2, 0, 0, pcre_execute);
     pcre_malloc = scm_malloc;
 }
