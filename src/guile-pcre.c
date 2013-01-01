@@ -115,7 +115,7 @@ static SCM match_pcre(SCM pcre_smob, SCM string)
     regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
     pcre_fullinfo(regexp->regexp, NULL, PCRE_INFO_CAPTURECOUNT, &capture_count);
     capture_count += 3;
-  
+
     if (capture_count)
 	captures = alloca(capture_count * 3 * sizeof(*captures));
     memset(captures, 0, 3 * sizeof(*captures));
@@ -132,8 +132,8 @@ static SCM match_pcre(SCM pcre_smob, SCM string)
 	scm_c_vector_set_x(rv, 0, string);
 	for (i = 0; i < rc; ++i) {
 	    SCM start = scm_from_signed_integer(captures[i * 2]);
-	    SCM len = scm_from_signed_integer(captures[i * 2 +1] - captures[i * 2]);
-	    scm_c_vector_set_x(rv, i + 1, scm_cons(start, len));
+	    SCM end = scm_from_signed_integer(captures[i * 2 + 1]);
+	    scm_c_vector_set_x(rv, i + 1, scm_cons(start, end));
 	}
     }
 
