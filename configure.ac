@@ -10,7 +10,7 @@ LT_INIT([dlopen])
 
 AC_CONFIG_FILES([src/Makefile])
 PKG_CHECK_MODULES([GUILE], [guile-2.2])
-AX_PKG_CHECK_VARIABLE([GUILE_SITEDIR], [guile-2.2], sitedir, [directory for GUILE site specific source files])
+GUILE_SITE_DIR
 AX_PKG_CHECK_VARIABLE([GUILE_EXTENSIONDIR], [guile-2.2], extensiondir, [directory for GUILE extension installation])
 
 AC_OUTPUT(Makefile)

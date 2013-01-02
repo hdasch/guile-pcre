@@ -8,5 +8,5 @@ libguile_pcre_la_SOURCES = guile-pcre.c
 libguile_pcre_la_CFLAGS = $(GUILE_CFLAGS)
 libguile_pcre_la_LDFLAGS = -lpcre $(GUILE_LIBS)
 
-sitedir = $(GUILE_SITEDIR)
+sitedir = $(GUILE_SITE)
 dist_site_SCRIPTS = guile-pcre.scm
