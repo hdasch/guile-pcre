@@ -169,6 +169,7 @@ static size_t free_pcre(SCM pcre_smob)
 
     free(regexp->pattern);
     regexp->pattern = NULL;
+    scm_gc_free(regexp, sizeof(*regexp), "pcre");
     return 0;
 }
 
