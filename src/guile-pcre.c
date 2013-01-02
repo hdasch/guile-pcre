@@ -177,7 +177,8 @@ static size_t free_pcre(SCM pcre_smob)
 {
     struct guile_pcre *regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
 
-    free(regexp->pattern);
+    pcre_free(regexp->regexp);
+    regexp->regexp = NULL;
     regexp->pattern = NULL;
     scm_gc_free(regexp, sizeof(*regexp), "pcre");
     return 0;
@@ -192,5 +193,5 @@ void init_pcre(void)
 
     scm_c_define_gsubr("make-pcre", 1, 0, 0, make_pcre);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, pcre_execute);
-    pcre_malloc = scm_malloc;
+    pcre_malloc = scm_malloc;		/* No corresponding scm_free(). */
 }
