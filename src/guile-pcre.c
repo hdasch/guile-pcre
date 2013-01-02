@@ -50,6 +50,14 @@ static SCM make_pcre(SCM pattern)
 	regexp->regexp = pcre_compile2(scm_to_locale_string(pattern), 0,
 				       &error_code, &error_ptr,
 				       &error_offset, NULL);
+	if (regexp->regexp == NULL) {
+	    SCM args;
+
+	    args = scm_cons(scm_from_latin1_string(error_ptr),
+			    scm_cons(scm_from_int(error_offset), SCM_EOL));
+	    scm_error(scm_from_latin1_symbol("make-pcre-error"),
+		      "make-pcre", "~S: offset ~S", args, SCM_BOOL_F);
+	}
     }
 
     SCM_NEWSMOB(smob, pcre_tag, regexp);
@@ -124,7 +132,9 @@ static SCM pcre_execute(SCM pcre_smob, SCM string)
 		   scm_c_string_length(string), 0, 0, captures,
 		   capture_count);
     if (rc < 0 && rc != PCRE_ERROR_NOMATCH) {
-	rv = pcre_error_to_string(rc);
+	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
+		      scm_from_latin1_string("pcre-exec"),
+		      pcre_error_to_string(rc), SCM_EOL, SCM_BOOL_F);
     } else if (rc > 0) {
 	int i;
 
