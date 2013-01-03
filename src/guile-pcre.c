@@ -123,20 +123,20 @@ static SCM pcre_execute(SCM pcre_smob, SCM string)
     int rc;
     int capture_count = 0;
     int *captures = NULL;
+    int ovec_count;
 
     scm_assert_smob_type(pcre_tag, pcre_smob);
 
     regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
     pcre_fullinfo(regexp->regexp, NULL, PCRE_INFO_CAPTURECOUNT, &capture_count);
-    capture_count += 3;
+    ovec_count = (capture_count + 1) * 3;
 
-    if (capture_count)
-	captures = alloca(capture_count * 3 * sizeof(*captures));
-    memset(captures, 0, 3 * sizeof(*captures));
+    captures = alloca(ovec_count * sizeof(*captures));
+    memset(captures, 0, ovec_count * sizeof(*captures));
 
     rc = pcre_exec(regexp->regexp, NULL, scm_to_locale_string(string),
 		   scm_c_string_length(string), 0, 0, captures,
-		   capture_count);
+		   ovec_count);
     if (rc < 0 && rc != PCRE_ERROR_NOMATCH) {
 	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
 		      scm_from_latin1_string("pcre-exec"),
