@@ -31,6 +31,7 @@ static scm_t_bits pcre_tag;
 struct guile_pcre
 {
     pcre *regexp;
+    pcre_extra *extra;
     SCM  pattern;
 };
 
@@ -68,6 +69,21 @@ static SCM guile_pcre_compile(SCM pattern, SCM options)
 
     SCM_NEWSMOB(smob, pcre_tag, regexp);
     return smob;
+}
+
+static SCM guile_pcre_study(SCM pcre_smob)
+{
+    struct guile_pcre *regexp;
+    const char *error_ptr = NULL;
+
+    scm_assert_smob_type(pcre_tag, pcre_smob);
+    regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
+    regexp->extra = pcre_study(regexp->regexp, 0, &error_ptr);
+    if (error_ptr != NULL)
+	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
+		      scm_from_latin1_string("pcre-study"),
+		      error_ptr, SCM_EOL, SCM_BOOL_F);
+    return pcre_smob;
 }
 
 static SCM pcre_error_to_string(int rc)
@@ -134,7 +150,7 @@ static SCM guile_pcre_exec(SCM pcre_smob, SCM string)
     captures = alloca(ovec_count * sizeof(*captures));
     memset(captures, 0, ovec_count * sizeof(*captures));
 
-    rc = pcre_exec(regexp->regexp, NULL, scm_to_locale_string(string),
+    rc = pcre_exec(regexp->regexp, regexp->extra, scm_to_locale_string(string),
 		   scm_c_string_length(string), 0, 0, captures,
 		   ovec_count);
     if (rc < 0 && rc != PCRE_ERROR_NOMATCH) {
@@ -183,6 +199,8 @@ static size_t free_pcre(SCM pcre_smob)
 {
     struct guile_pcre *regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
 
+    pcre_free_study(regexp->extra);
+    regexp->extra = NULL;
     pcre_free(regexp->regexp);
     regexp->regexp = NULL;
     regexp->pattern = NULL;
@@ -239,6 +257,7 @@ void init_pcre(void)
     scm_set_smob_mark(pcre_tag, mark_pcre);
     scm_set_smob_free(pcre_tag, free_pcre);
     scm_c_define_gsubr("pcre-compile", 1, 0, 0, guile_pcre_compile);
+    scm_c_define_gsubr("pcre-study", 1, 0, 0, guile_pcre_study);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
     for (i = 0; i < ARRAY_SIZE(flag_table); ++i) {
 	scm_c_define(flag_table[i].name, scm_from_int(flag_table[i].value));
