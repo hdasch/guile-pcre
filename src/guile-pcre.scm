@@ -4,3 +4,7 @@
 
 
 (load-extension "libguile-pcre" "init_pcre")
+
+(define (make-pcre pattern)
+  (pcre-compile pattern))
+

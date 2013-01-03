@@ -34,7 +34,7 @@ struct guile_pcre
     SCM  pattern;
 };
 
-static SCM make_pcre(SCM pattern, SCM options)
+static SCM guile_pcre_compile(SCM pattern, SCM options)
 {
     SCM smob;
     struct guile_pcre *regexp;
@@ -116,7 +116,7 @@ static SCM pcre_error_to_string(int rc)
     return scm_from_locale_string(error_buffer);
 }
 
-static SCM pcre_execute(SCM pcre_smob, SCM string)
+static SCM guile_pcre_exec(SCM pcre_smob, SCM string)
 {
     struct guile_pcre *regexp;
     SCM rv = SCM_BOOL_F;
@@ -209,12 +209,8 @@ void init_pcre(void)
 	{ "PCRE_UNGREEDY", PCRE_UNGREEDY },
 	{ "PCRE_NOTEMPTY", PCRE_NOTEMPTY },
 	{ "PCRE_UTF8", PCRE_UTF8 },
-	{ "PCRE_UTF16", PCRE_UTF16 },
-	{ "PCRE_UTF32", PCRE_UTF32 },
 	{ "PCRE_NO_AUTO_CAPTURE", PCRE_NO_AUTO_CAPTURE },
 	{ "PCRE_NO_UTF8_CHECK", PCRE_NO_UTF8_CHECK },
-	{ "PCRE_NO_UTF16_CHECK", PCRE_NO_UTF16_CHECK },
-	{ "PCRE_NO_UTF32_CHECK", PCRE_NO_UTF32_CHECK },
 	{ "PCRE_AUTO_CALLOUT", PCRE_AUTO_CALLOUT },
 	{ "PCRE_PARTIAL_SOFT", PCRE_PARTIAL_SOFT },
 	{ "PCRE_PARTIAL", PCRE_PARTIAL },
@@ -242,8 +238,8 @@ void init_pcre(void)
     scm_set_smob_print(pcre_tag, print_pcre);
     scm_set_smob_mark(pcre_tag, mark_pcre);
     scm_set_smob_free(pcre_tag, free_pcre);
-    scm_c_define_gsubr("make-pcre", 1, 0, 1, make_pcre);
-    scm_c_define_gsubr("pcre-exec", 2, 0, 0, pcre_execute);
+    scm_c_define_gsubr("pcre-compile", 1, 0, 0, guile_pcre_compile);
+    scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
     for (i = 0; i < ARRAY_SIZE(flag_table); ++i) {
 	scm_c_define(flag_table[i].name, scm_from_int(flag_table[i].value));
 	scm_c_export(flag_table[i].name, NULL);
