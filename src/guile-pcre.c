@@ -34,10 +34,16 @@ struct guile_pcre
     SCM  pattern;
 };
 
-static SCM make_pcre(SCM pattern)
+static SCM make_pcre(SCM pattern, SCM options)
 {
     SCM smob;
     struct guile_pcre *regexp;
+    int flags = 0;
+
+    while (!scm_is_null(options)) {
+	flags |= scm_to_int(scm_car(options));
+	options = scm_cdr(options);
+    }
 
     regexp = (struct guile_pcre *) scm_gc_malloc(sizeof(*regexp), "pcre");
 
@@ -47,7 +53,7 @@ static SCM make_pcre(SCM pattern)
 	int  error_offset = 0;
 
 	regexp->pattern = pattern;
-	regexp->regexp = pcre_compile2(scm_to_locale_string(pattern), 0,
+	regexp->regexp = pcre_compile2(scm_to_locale_string(pattern), flags,
 				       &error_code, &error_ptr,
 				       &error_offset, NULL);
 	if (regexp->regexp == NULL) {
@@ -186,12 +192,61 @@ static size_t free_pcre(SCM pcre_smob)
 
 void init_pcre(void)
 {
+    struct pcre_flags
+    {
+	char *name;
+	int value;
+    } flag_table [] = {
+	{ "PCRE_CASELESS", PCRE_CASELESS },
+	{ "PCRE_MULTILINE", PCRE_MULTILINE },
+	{ "PCRE_DOTALL", PCRE_DOTALL },
+	{ "PCRE_EXTENDED", PCRE_EXTENDED },
+	{ "PCRE_ANCHORED", PCRE_ANCHORED },
+	{ "PCRE_DOLLAR_ENDONLY", PCRE_DOLLAR_ENDONLY },
+	{ "PCRE_EXTRA", PCRE_EXTRA },
+	{ "PCRE_NOTBOL", PCRE_NOTBOL },
+	{ "PCRE_NOTEOL", PCRE_NOTEOL },
+	{ "PCRE_UNGREEDY", PCRE_UNGREEDY },
+	{ "PCRE_NOTEMPTY", PCRE_NOTEMPTY },
+	{ "PCRE_UTF8", PCRE_UTF8 },
+	{ "PCRE_UTF16", PCRE_UTF16 },
+	{ "PCRE_UTF32", PCRE_UTF32 },
+	{ "PCRE_NO_AUTO_CAPTURE", PCRE_NO_AUTO_CAPTURE },
+	{ "PCRE_NO_UTF8_CHECK", PCRE_NO_UTF8_CHECK },
+	{ "PCRE_NO_UTF16_CHECK", PCRE_NO_UTF16_CHECK },
+	{ "PCRE_NO_UTF32_CHECK", PCRE_NO_UTF32_CHECK },
+	{ "PCRE_AUTO_CALLOUT", PCRE_AUTO_CALLOUT },
+	{ "PCRE_PARTIAL_SOFT", PCRE_PARTIAL_SOFT },
+	{ "PCRE_PARTIAL", PCRE_PARTIAL },
+	{ "PCRE_DFA_SHORTEST", PCRE_DFA_SHORTEST },
+	{ "PCRE_DFA_RESTART", PCRE_DFA_RESTART },
+	{ "PCRE_FIRSTLINE", PCRE_FIRSTLINE },
+	{ "PCRE_DUPNAMES", PCRE_DUPNAMES },
+	{ "PCRE_NEWLINE_CR", PCRE_NEWLINE_CR },
+	{ "PCRE_NEWLINE_LF", PCRE_NEWLINE_LF },
+	{ "PCRE_NEWLINE_CRLF", PCRE_NEWLINE_CRLF },
+	{ "PCRE_NEWLINE_ANY", PCRE_NEWLINE_ANY },
+	{ "PCRE_NEWLINE_ANYCRLF", PCRE_NEWLINE_ANYCRLF },
+	{ "PCRE_BSR_ANYCRLF", PCRE_BSR_ANYCRLF },
+	{ "PCRE_BSR_UNICODE", PCRE_BSR_UNICODE },
+	{ "PCRE_JAVASCRIPT_COMPAT", PCRE_JAVASCRIPT_COMPAT },
+	{ "PCRE_NO_START_OPTIMIZE", PCRE_NO_START_OPTIMIZE },
+	{ "PCRE_NO_START_OPTIMISE", PCRE_NO_START_OPTIMISE },
+	{ "PCRE_PARTIAL_HARD", PCRE_PARTIAL_HARD },
+	{ "PCRE_NOTEMPTY_ATSTART", PCRE_NOTEMPTY_ATSTART },
+	{ "PCRE_UCP", PCRE_UCP },
+    };
+    size_t i;
+
     pcre_tag = scm_make_smob_type ("pcre", sizeof(struct guile_pcre));
     scm_set_smob_print(pcre_tag, print_pcre);
     scm_set_smob_mark(pcre_tag, mark_pcre);
     scm_set_smob_free(pcre_tag, free_pcre);
-
-    scm_c_define_gsubr("make-pcre", 1, 0, 0, make_pcre);
+    scm_c_define_gsubr("make-pcre", 1, 0, 1, make_pcre);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, pcre_execute);
+    for (i = 0; i < ARRAY_SIZE(flag_table); ++i) {
+	scm_c_define(flag_table[i].name, scm_from_int(flag_table[i].value));
+	scm_c_export(flag_table[i].name, NULL);
+    }
     pcre_malloc = scm_malloc;		/* No corresponding scm_free(). */
 }
