@@ -82,7 +82,8 @@ static SCM guile_pcre_study(SCM pcre_smob)
     if (error_ptr != NULL)
 	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
 		      scm_from_latin1_string("pcre-study"),
-		      error_ptr, SCM_EOL, SCM_BOOL_F);
+		      scm_from_latin1_string(error_ptr),
+		      SCM_EOL, SCM_BOOL_F);
     return pcre_smob;
 }
 
@@ -256,7 +257,7 @@ void init_pcre(void)
     scm_set_smob_print(pcre_tag, print_pcre);
     scm_set_smob_mark(pcre_tag, mark_pcre);
     scm_set_smob_free(pcre_tag, free_pcre);
-    scm_c_define_gsubr("pcre-compile", 1, 0, 0, guile_pcre_compile);
+    scm_c_define_gsubr("pcre-do-compile", 1, 1, 0, guile_pcre_compile);
     scm_c_define_gsubr("pcre-study", 1, 0, 0, guile_pcre_study);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
     for (i = 0; i < ARRAY_SIZE(flag_table); ++i) {

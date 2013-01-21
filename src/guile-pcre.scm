@@ -1,8 +1,11 @@
 (define-module (guile-pcre)
-  #:export (make-pcre pcre-study pcre-exec))
+  #:export (make-pcre pcre-compile pcre-study pcre-exec))
 
 (load-extension "libguile-pcre" "init_pcre")
 
-(define (make-pcre pattern)
-  (pcre-study (pcre-compile pattern)))
+(define (make-pcre pattern . flags)
+  (pcre-study (pcre-do-compile pattern flags)))
+
+(define (pcre-compile pattern . flags)
+  (pcre-do-compile pattern flags))
 
