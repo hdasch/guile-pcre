@@ -141,9 +141,13 @@ static SCM guile_pcre_exec(SCM pcre_smob, SCM string)
     int capture_count = 0;
     int *captures = NULL;
     int ovec_count;
+    size_t len = scm_c_string_length(string);
+    char *cstr = alloca(len + 1);
 
     scm_assert_smob_type(pcre_tag, pcre_smob);
 
+    scm_to_locale_stringbuf(string, cstr, len);
+    cstr[len] = 0;
     regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
     pcre_fullinfo(regexp->regexp, NULL, PCRE_INFO_CAPTURECOUNT, &capture_count);
     ovec_count = (capture_count + 1) * 3;
@@ -151,8 +155,7 @@ static SCM guile_pcre_exec(SCM pcre_smob, SCM string)
     captures = alloca(ovec_count * sizeof(*captures));
     memset(captures, 0, ovec_count * sizeof(*captures));
 
-    rc = pcre_exec(regexp->regexp, regexp->extra, scm_to_locale_string(string),
-		   scm_c_string_length(string), 0, 0, captures,
+    rc = pcre_exec(regexp->regexp, regexp->extra, cstr, len, 0, 0, captures,
 		   ovec_count);
     if (rc < 0 && rc != PCRE_ERROR_NOMATCH) {
 	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
