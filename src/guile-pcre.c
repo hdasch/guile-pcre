@@ -194,8 +194,9 @@ static SCM guile_pcre_config(SCM config_name)
 {
     SCM rv = SCM_BOOL_F;
     int parm = scm_to_int(config_name);
-    int bool;
-    int value;
+    int bool_value;
+    int int_value;
+    long long_value;
     const char *s;
 
     switch (parm) {
@@ -204,17 +205,20 @@ static SCM guile_pcre_config(SCM config_name)
     case PCRE_CONFIG_UTF32:
     case PCRE_CONFIG_UNICODE_PROPERTIES:
     case PCRE_CONFIG_JIT:
-	pcre_config(parm, &bool);
-	return bool == 1 ? SCM_BOOL_T : SCM_BOOL_F;
-    case PCRE_CONFIG_NEWLINE:
     case PCRE_CONFIG_BSR:
+	pcre_config(parm, &bool_value);
+	return bool_value == 1 ? SCM_BOOL_T : SCM_BOOL_F;
+    case PCRE_CONFIG_NEWLINE:
     case PCRE_CONFIG_LINK_SIZE:
     case PCRE_CONFIG_POSIX_MALLOC_THRESHOLD:
+    case PCRE_CONFIG_STACKRECURSE:
+	pcre_config(parm, &int_value);
+	return scm_from_signed_integer(int_value);
+
     case PCRE_CONFIG_MATCH_LIMIT:
     case PCRE_CONFIG_MATCH_LIMIT_RECURSION:
-    case PCRE_CONFIG_STACKRECURSE:
-	pcre_config(parm, &value);
-	return scm_from_signed_integer(value);
+	pcre_config(parm, &long_value);
+	return scm_from_long(long_value);
 
     case PCRE_CONFIG_JITTARGET:
 	pcre_config(parm, &s);

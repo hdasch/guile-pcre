@@ -19,3 +19,4 @@
 (format #t "UTF16: ~a\n" (pcre-config PCRE_CONFIG_UTF16))
 (format #t "JIT: ~a\n" (pcre-config PCRE_CONFIG_JIT))
 (format #t "JITTARGET: ~a\n" (pcre-config PCRE_CONFIG_JITTARGET))
+(format #t "MATCH_LIMIT: ~a\n" (pcre-config PCRE_CONFIG_MATCH_LIMIT))
