@@ -77,14 +77,24 @@ static SCM guile_pcre_compile(SCM pattern, SCM options)
     return smob;
 }
 
-static SCM guile_pcre_study(SCM pcre_smob)
+static SCM guile_pcre_study(SCM pcre_smob, SCM options)
 {
     struct guile_pcre *regexp;
     const char *error_ptr = NULL;
+    int flags = 0;
+
+    if (scm_is_integer(options))
+	flags = scm_to_int(options);
+    else {
+	while (!scm_is_null(options)) {
+	    flags |= scm_to_int(scm_car(options));
+	    options = scm_cdr(options);
+	}
+    }
 
     scm_assert_smob_type(pcre_tag, pcre_smob);
     regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
-    regexp->extra = pcre_study(regexp->regexp, 0, &error_ptr);
+    regexp->extra = pcre_study(regexp->regexp, flags, &error_ptr);
     if (error_ptr != NULL)
 	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
 		      scm_from_latin1_string("pcre-study"),
@@ -306,6 +316,12 @@ void init_pcre(void)
 	{ "PCRE_PARTIAL_HARD", PCRE_PARTIAL_HARD },
 	{ "PCRE_NOTEMPTY_ATSTART", PCRE_NOTEMPTY_ATSTART },
 	{ "PCRE_UCP", PCRE_UCP },
+		/* pcre_study() flags */
+	{ "PCRE_STUDY_JIT_COMPILE", PCRE_STUDY_JIT_COMPILE },
+	{ "PCRE_STUDY_JIT_PARTIAL_SOFT_COMPILE", PCRE_STUDY_JIT_PARTIAL_SOFT_COMPILE },
+	{ "PCRE_STUDY_JIT_PARTIAL_HARD_COMPILE", PCRE_STUDY_JIT_PARTIAL_HARD_COMPILE },
+	{ "PCRE_STUDY_EXTRA_NEEDED", PCRE_STUDY_EXTRA_NEEDED },
+
 		/* Config values */
 	{ "PCRE_CONFIG_UTF8", PCRE_CONFIG_UTF8, },
 	{ "PCRE_CONFIG_UTF16", PCRE_CONFIG_UTF16, },
@@ -328,7 +344,7 @@ void init_pcre(void)
     scm_set_smob_mark(pcre_tag, mark_pcre);
     scm_set_smob_free(pcre_tag, free_pcre);
     scm_c_define_gsubr("pcre-do-compile", 1, 1, 0, guile_pcre_compile);
-    scm_c_define_gsubr("pcre-study", 1, 0, 0, guile_pcre_study);
+    scm_c_define_gsubr("pcre-study", 1, 1, 0, guile_pcre_study);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
     scm_c_define_gsubr("pcre-config", 1, 0, 0, guile_pcre_config);
     for (i = 0; i < ARRAY_SIZE(symbol_table); ++i) {
