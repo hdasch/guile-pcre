@@ -35,6 +35,12 @@ struct guile_pcre
     SCM  pattern;
 };
 
+struct name_value
+{
+    char *name;
+    int value;
+};
+
 static SCM guile_pcre_compile(SCM pattern, SCM options)
 {
     SCM smob;
@@ -89,44 +95,39 @@ static SCM guile_pcre_study(SCM pcre_smob)
 
 static SCM pcre_error_to_string(int rc)
 {
-    struct error_xlate
-    {
-	int error;
-	char *name;
-    };
-    static struct error_xlate error_table[] = {
-	{ PCRE_ERROR_NOMATCH, "PCRE_ERROR_NOMATCH" },
-	{ PCRE_ERROR_NULL, "PCRE_ERROR_NULL" },
-	{ PCRE_ERROR_BADOPTION, "PCRE_ERROR_BADOPTION" },
-	{ PCRE_ERROR_BADMAGIC, "PCRE_ERROR_BADMAGIC" },
-	{ PCRE_ERROR_UNKNOWN_OPCODE, "PCRE_ERROR_UNKNOWN_OPCODE" },
-	{ PCRE_ERROR_UNKNOWN_NODE, "PCRE_ERROR_UNKNOWN_NODE" },
-	{ PCRE_ERROR_NOMEMORY, "PCRE_ERROR_NOMEMORY" },
-	{ PCRE_ERROR_NOSUBSTRING, "PCRE_ERROR_NOSUBSTRING" },
-	{ PCRE_ERROR_MATCHLIMIT, "PCRE_ERROR_MATCHLIMIT" },
-	{ PCRE_ERROR_CALLOUT, "PCRE_ERROR_CALLOUT" },
-	{ PCRE_ERROR_BADUTF8, "PCRE_ERROR_BADUTF8" },
-	{ PCRE_ERROR_BADUTF8_OFFSET, "PCRE_ERROR_BADUTF8_OFFSET" },
-	{ PCRE_ERROR_PARTIAL, "PCRE_ERROR_PARTIAL" },
-	{ PCRE_ERROR_BADPARTIAL, "PCRE_ERROR_BADPARTIAL" },
-	{ PCRE_ERROR_INTERNAL, "PCRE_ERROR_INTERNAL" },
-	{ PCRE_ERROR_BADCOUNT, "PCRE_ERROR_BADCOUNT" },
-	{ PCRE_ERROR_DFA_UITEM, "PCRE_ERROR_DFA_UITEM" },
-	{ PCRE_ERROR_DFA_UCOND, "PCRE_ERROR_DFA_UCOND" },
-	{ PCRE_ERROR_DFA_UMLIMIT, "PCRE_ERROR_DFA_UMLIMIT" },
-	{ PCRE_ERROR_DFA_WSSIZE, "PCRE_ERROR_DFA_WSSIZE" },
-	{ PCRE_ERROR_DFA_RECURSE, "PCRE_ERROR_DFA_RECURSE" },
-	{ PCRE_ERROR_RECURSIONLIMIT, "PCRE_ERROR_RECURSIONLIMIT" },
-	{ PCRE_ERROR_NULLWSLIMIT, "PCRE_ERROR_NULLWSLIMIT" },
-	{ PCRE_ERROR_BADNEWLINE, "PCRE_ERROR_BADNEWLINE" },
-	{ PCRE_ERROR_BADOFFSET, "PCRE_ERROR_BADOFFSET" },
-	{ PCRE_ERROR_SHORTUTF8, "PCRE_ERROR_SHORTUTF8" }
+    static struct name_value error_table[] = {
+	{ "PCRE_ERROR_NOMATCH", PCRE_ERROR_NOMATCH },
+	{ "PCRE_ERROR_NULL", PCRE_ERROR_NULL },
+	{ "PCRE_ERROR_BADOPTION", PCRE_ERROR_BADOPTION },
+	{ "PCRE_ERROR_BADMAGIC", PCRE_ERROR_BADMAGIC },
+	{ "PCRE_ERROR_UNKNOWN_OPCODE", PCRE_ERROR_UNKNOWN_OPCODE },
+	{ "PCRE_ERROR_UNKNOWN_NODE", PCRE_ERROR_UNKNOWN_NODE },
+	{ "PCRE_ERROR_NOMEMORY", PCRE_ERROR_NOMEMORY },
+	{ "PCRE_ERROR_NOSUBSTRING", PCRE_ERROR_NOSUBSTRING },
+	{ "PCRE_ERROR_MATCHLIMIT", PCRE_ERROR_MATCHLIMIT },
+	{ "PCRE_ERROR_CALLOUT", PCRE_ERROR_CALLOUT },
+	{ "PCRE_ERROR_BADUTF8", PCRE_ERROR_BADUTF8 },
+	{ "PCRE_ERROR_BADUTF8_OFFSET", PCRE_ERROR_BADUTF8_OFFSET },
+	{ "PCRE_ERROR_PARTIAL", PCRE_ERROR_PARTIAL },
+	{ "PCRE_ERROR_BADPARTIAL", PCRE_ERROR_BADPARTIAL },
+	{ "PCRE_ERROR_INTERNAL", PCRE_ERROR_INTERNAL },
+	{ "PCRE_ERROR_BADCOUNT", PCRE_ERROR_BADCOUNT },
+	{ "PCRE_ERROR_DFA_UITEM", PCRE_ERROR_DFA_UITEM },
+	{ "PCRE_ERROR_DFA_UCOND", PCRE_ERROR_DFA_UCOND },
+	{ "PCRE_ERROR_DFA_UMLIMIT", PCRE_ERROR_DFA_UMLIMIT },
+	{ "PCRE_ERROR_DFA_WSSIZE", PCRE_ERROR_DFA_WSSIZE },
+	{ "PCRE_ERROR_DFA_RECURSE", PCRE_ERROR_DFA_RECURSE },
+	{ "PCRE_ERROR_RECURSIONLIMIT", PCRE_ERROR_RECURSIONLIMIT },
+	{ "PCRE_ERROR_NULLWSLIMIT", PCRE_ERROR_NULLWSLIMIT },
+	{ "PCRE_ERROR_BADNEWLINE", PCRE_ERROR_BADNEWLINE },
+	{ "PCRE_ERROR_BADOFFSET", PCRE_ERROR_BADOFFSET },
+	{ "PCRE_ERROR_SHORTUTF8", PCRE_ERROR_SHORTUTF8 }
     };
     char error_buffer[64];
     size_t i;
 
     for (i = 0; i < ARRAY_SIZE(error_table); ++i)
-	if (error_table[i].error == rc)
+	if (error_table[i].value == rc)
 	    return scm_from_locale_string(error_table[i].name);
     snprintf(error_buffer, sizeof(error_buffer), "Unknown pcre error: %d",
 	     rc);
@@ -178,6 +179,57 @@ static SCM guile_pcre_exec(SCM pcre_smob, SCM string)
     return rv;
 }
 
+static int value_lookup_by_name(const struct name_value *table, size_t count,
+				const char *name)
+{
+    size_t i;
+
+    for (i = 0; i < count; ++i)
+	if (strcmp(table[i].name, name) == 0)
+	    return i;
+    return -1;
+}
+
+static SCM guile_pcre_config(SCM config_name)
+{
+    SCM rv = SCM_BOOL_F;
+    int parm = scm_to_int(config_name);
+    int bool;
+    int value;
+    const char *s;
+
+    switch (parm) {
+    case PCRE_CONFIG_UTF8:
+    case PCRE_CONFIG_UTF16:
+    case PCRE_CONFIG_UTF32:
+    case PCRE_CONFIG_UNICODE_PROPERTIES:
+    case PCRE_CONFIG_JIT:
+	pcre_config(parm, &bool);
+	return bool == 1 ? SCM_BOOL_T : SCM_BOOL_F;
+    case PCRE_CONFIG_NEWLINE:
+    case PCRE_CONFIG_BSR:
+    case PCRE_CONFIG_LINK_SIZE:
+    case PCRE_CONFIG_POSIX_MALLOC_THRESHOLD:
+    case PCRE_CONFIG_MATCH_LIMIT:
+    case PCRE_CONFIG_MATCH_LIMIT_RECURSION:
+    case PCRE_CONFIG_STACKRECURSE:
+	pcre_config(parm, &value);
+	return scm_from_signed_integer(value);
+
+    case PCRE_CONFIG_JITTARGET:
+	pcre_config(parm, &s);
+	if (s == NULL)
+	    return SCM_BOOL_F;
+	return scm_from_latin1_string(s);
+    default:
+	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
+		      scm_from_latin1_string("pcre-config"),
+		      scm_from_latin1_string("Unrecognized parameter name ~S"),
+		      scm_cons(config_name, SCM_EOL),
+		      SCM_BOOL_F);
+    }
+}
+
 static int print_pcre(SCM pcre_smob, SCM port, scm_print_state *pstate)
 {
     struct guile_pcre *regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
@@ -214,11 +266,8 @@ static size_t free_pcre(SCM pcre_smob)
 
 void init_pcre(void)
 {
-    struct pcre_flags
-    {
-	char *name;
-	int value;
-    } flag_table [] = {
+    struct name_value symbol_table [] = {
+		/* regexp flags */
 	{ "PCRE_CASELESS", PCRE_CASELESS },
 	{ "PCRE_MULTILINE", PCRE_MULTILINE },
 	{ "PCRE_DOTALL", PCRE_DOTALL },
@@ -253,6 +302,20 @@ void init_pcre(void)
 	{ "PCRE_PARTIAL_HARD", PCRE_PARTIAL_HARD },
 	{ "PCRE_NOTEMPTY_ATSTART", PCRE_NOTEMPTY_ATSTART },
 	{ "PCRE_UCP", PCRE_UCP },
+		/* Config values */
+	{ "PCRE_CONFIG_UTF8", PCRE_CONFIG_UTF8, },
+	{ "PCRE_CONFIG_UTF16", PCRE_CONFIG_UTF16, },
+	{ "PCRE_CONFIG_UTF32", PCRE_CONFIG_UTF32, },
+	{ "PCRE_CONFIG_UNICODE_PROPERTIES", PCRE_CONFIG_UNICODE_PROPERTIES, },
+	{ "PCRE_CONFIG_JIT", PCRE_CONFIG_JIT, },
+	{ "PCRE_CONFIG_NEWLINE", PCRE_CONFIG_NEWLINE, },
+	{ "PCRE_CONFIG_BSR", PCRE_CONFIG_BSR, },
+	{ "PCRE_CONFIG_LINK_SIZE", PCRE_CONFIG_LINK_SIZE, },
+	{ "PCRE_CONFIG_POSIX_MALLOC_THRESHOLD", PCRE_CONFIG_POSIX_MALLOC_THRESHOLD, },
+	{ "PCRE_CONFIG_MATCH_LIMIT", PCRE_CONFIG_MATCH_LIMIT, },
+	{ "PCRE_CONFIG_MATCH_LIMIT_RECURSION", PCRE_CONFIG_MATCH_LIMIT_RECURSION, },
+	{ "PCRE_CONFIG_STACKRECURSE", PCRE_CONFIG_STACKRECURSE, },
+	{ "PCRE_CONFIG_JITTARGET", PCRE_CONFIG_JITTARGET, },
     };
     size_t i;
 
@@ -263,9 +326,10 @@ void init_pcre(void)
     scm_c_define_gsubr("pcre-do-compile", 1, 1, 0, guile_pcre_compile);
     scm_c_define_gsubr("pcre-study", 1, 0, 0, guile_pcre_study);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
-    for (i = 0; i < ARRAY_SIZE(flag_table); ++i) {
-	scm_c_define(flag_table[i].name, scm_from_int(flag_table[i].value));
-	scm_c_export(flag_table[i].name, NULL);
+    scm_c_define_gsubr("pcre-config", 1, 0, 0, guile_pcre_config);
+    for (i = 0; i < ARRAY_SIZE(symbol_table); ++i) {
+	scm_c_define(symbol_table[i].name, scm_from_int(symbol_table[i].value));
+	scm_c_export(symbol_table[i].name, NULL);
     }
     pcre_malloc = scm_malloc;		/* No corresponding scm_free(). */
 }

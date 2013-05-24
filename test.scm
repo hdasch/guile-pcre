@@ -13,4 +13,9 @@
 ;;;(set! %load-path (cons "/home/hugh/guile-pcre" %load-path)
 ;;;(load-extension "./libguile-pcre" "init_pcre")
 
-(format #t "~a\n" (match-pcre (make-pcre "abc") "123abc456"))
+(format #t "~a\n" (pcre-exec (make-pcre "([[:digit:].]+)abc") "123.456abc789"))
+(format #t "~a\n" (pcre-exec (make-pcre "abc") "123abc456"))
+(format #t "UTF8: ~a\n" (pcre-config PCRE_CONFIG_UTF8))
+(format #t "UTF16: ~a\n" (pcre-config PCRE_CONFIG_UTF16))
+(format #t "JIT: ~a\n" (pcre-config PCRE_CONFIG_JIT))
+(format #t "JITTARGET: ~a\n" (pcre-config PCRE_CONFIG_JITTARGET))
