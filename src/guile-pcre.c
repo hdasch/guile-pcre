@@ -47,9 +47,13 @@ static SCM guile_pcre_compile(SCM pattern, SCM options)
     struct guile_pcre *regexp;
     int flags = 0;
 
-    while (!scm_is_null(options)) {
-	flags |= scm_to_int(scm_car(options));
-	options = scm_cdr(options);
+    if (scm_is_integer(options))
+	flags = scm_to_int(options);
+    else {
+	while (!scm_is_null(options)) {
+	    flags |= scm_to_int(scm_car(options));
+	    options = scm_cdr(options);
+	}
     }
 
     regexp = (struct guile_pcre *) scm_gc_malloc(sizeof(*regexp), "pcre");
