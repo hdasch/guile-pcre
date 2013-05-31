@@ -212,6 +212,7 @@ static SCM guile_pcre_config(SCM config_name)
     int int_value;
     long long_value;
     const char *s;
+    int rc;
 
     switch (parm) {
     case PCRE_CONFIG_UTF8:
@@ -220,25 +221,32 @@ static SCM guile_pcre_config(SCM config_name)
     case PCRE_CONFIG_UNICODE_PROPERTIES:
     case PCRE_CONFIG_JIT:
     case PCRE_CONFIG_BSR:
-	pcre_config(parm, &bool_value);
-	return bool_value == 1 ? SCM_BOOL_T : SCM_BOOL_F;
+	rc = pcre_config(parm, &bool_value);
+	if (rc == 0)
+	    return bool_value == 1 ? SCM_BOOL_T : SCM_BOOL_F;
+	break;
+
     case PCRE_CONFIG_NEWLINE:
     case PCRE_CONFIG_LINK_SIZE:
     case PCRE_CONFIG_POSIX_MALLOC_THRESHOLD:
     case PCRE_CONFIG_STACKRECURSE:
-	pcre_config(parm, &int_value);
-	return scm_from_signed_integer(int_value);
+	rc = pcre_config(parm, &int_value);
+	if (rc == 0)
+	    return scm_from_signed_integer(int_value);
+	break;
 
     case PCRE_CONFIG_MATCH_LIMIT:
     case PCRE_CONFIG_MATCH_LIMIT_RECURSION:
-	pcre_config(parm, &long_value);
-	return scm_from_long(long_value);
+	rc = pcre_config(parm, &long_value);
+	if (rc == 0)
+	    return scm_from_long(long_value);
+	break;
 
     case PCRE_CONFIG_JITTARGET:
-	pcre_config(parm, &s);
-	if (s == NULL)
-	    return SCM_BOOL_F;
-	return scm_from_latin1_string(s);
+	rc = pcre_config(parm, &s);
+	if (rc != 0)
+	    break;
+	return s == NULL ? SCM_BOOL_F : scm_from_latin1_string(s);
     default:
 	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
 		      scm_from_latin1_string("pcre-config"),
@@ -246,6 +254,11 @@ static SCM guile_pcre_config(SCM config_name)
 		      scm_cons(config_name, SCM_EOL),
 		      SCM_BOOL_F);
     }
+    if (rc < 0)
+	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
+		      scm_from_latin1_string("pcre-config"),
+		      pcre_error_to_string(rc), SCM_EOL, SCM_BOOL_F);
+    return rv;
 }
 
 static int print_pcre(SCM pcre_smob, SCM port, scm_print_state *pstate)
