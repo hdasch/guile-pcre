@@ -222,6 +222,9 @@ static SCM guile_pcre_config(SCM config_name)
     case PCRE_CONFIG_JIT:
     case PCRE_CONFIG_BSR:
 	rc = pcre_config(parm, &bool_value);
+	if (rc == PCRE_ERROR_BADOPTION)
+	    return SCM_BOOL_F;
+
 	if (rc == 0)
 	    return bool_value == 1 ? SCM_BOOL_T : SCM_BOOL_F;
 	break;
@@ -257,7 +260,9 @@ static SCM guile_pcre_config(SCM config_name)
     if (rc < 0)
 	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
 		      scm_from_latin1_string("pcre-config"),
-		      pcre_error_to_string(rc), SCM_EOL, SCM_BOOL_F);
+		      pcre_error_to_string(rc),
+		      scm_cons(config_name, SCM_EOL),
+		      SCM_BOOL_F);
     return rv;
 }
 
