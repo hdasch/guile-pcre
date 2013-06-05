@@ -21,6 +21,8 @@
 (format #t "JITTARGET: ~a\n" (pcre-config PCRE_CONFIG_JITTARGET))
 (format #t "MATCH_LIMIT: ~a\n" (pcre-config PCRE_CONFIG_MATCH_LIMIT))
 
+(let ((re (make-pcre "abc" PCRE_CASELESS)))
+  (format #t "PCRE_INFO_BACKREFMAX: ~a\n" (pcre-fullinfo re PCRE_INFO_BACKREFMAX)))
 
 (format #t "~a\n" (pcre-exec (make-pcre "abc" PCRE_CASELESS) "123abc456"))
 (format #t "~a\n" (pcre-exec (make-pcre "abc" PCRE_CASELESS PCRE_STUDY_JIT_COMPILE) "123abc456"))

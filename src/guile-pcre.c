@@ -266,6 +266,82 @@ static SCM guile_pcre_config(SCM config_name)
     return rv;
 }
 
+static SCM guile_pcre_fullinfo(SCM pcre_smob, SCM what)
+{
+    struct guile_pcre *regexp;
+    SCM rv = SCM_BOOL_F;
+    int bool_value;
+    int int_value;
+    uint32_t uint32_value;
+    size_t size_value;
+    long long_value;
+    const char *s;
+    int parm;
+    int rc;
+
+    scm_assert_smob_type(pcre_tag, pcre_smob);
+    regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
+    parm = scm_to_int(what);
+	    /* currently unsupported: */
+	    /* PCRE_INFO_DEFAULT_TABLES */
+	    /* PCRE_INFO_FIRSTTABLE */
+	    /* PCRE_INFO_NAMETABLE */
+    switch (parm) {
+    case PCRE_INFO_BACKREFMAX:
+    case PCRE_INFO_CAPTURECOUNT:
+    case PCRE_INFO_FIRSTBYTE:
+    case PCRE_INFO_HASCRORLF:
+    case PCRE_INFO_JITSIZE:
+    case PCRE_INFO_LASTLITERAL:
+    case PCRE_INFO_MAXLOOKBEHIND:
+    case PCRE_INFO_MINLENGTH:
+    case PCRE_INFO_NAMECOUNT:
+    case PCRE_INFO_NAMEENTRYSIZE:
+    case PCRE_INFO_OPTIONS:
+    case PCRE_INFO_FIRSTCHARACTERFLAGS:
+    case PCRE_INFO_REQUIREDCHARFLAGS:
+	rc = pcre_fullinfo(regexp->regexp, regexp->extra, parm, &int_value);
+	if (rc == 0)
+	    return scm_from_signed_integer(int_value);
+	break;
+
+    case PCRE_INFO_SIZE:
+    case PCRE_INFO_STUDYSIZE:
+	rc = pcre_fullinfo(regexp->regexp, regexp->extra, parm, &size_value);
+	if (rc == 0)
+	    return scm_from_size_t(size_value);
+	break;
+
+    case PCRE_INFO_FIRSTCHARACTER:
+    case PCRE_INFO_REQUIREDCHAR:
+	rc = pcre_fullinfo(regexp->regexp, regexp->extra, parm, &uint32_value);
+	if (rc == 0)
+	    return scm_from_unsigned_integer(uint32_value);
+	break;
+
+    case PCRE_INFO_JCHANGED:
+    case PCRE_INFO_JIT:
+    case PCRE_INFO_OKPARTIAL:
+	rc = pcre_config(parm, &bool_value);
+	if (rc == 0)
+	    return bool_value == 1 ? SCM_BOOL_T : SCM_BOOL_F;
+	break;
+
+    default:
+	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
+		      scm_from_latin1_string("pcre-fullinfo"),
+		      scm_from_latin1_string("Unrecognized parameter what: ~S"),
+		      scm_cons(what, SCM_EOL),
+		      SCM_BOOL_F);
+    }
+    if (rc < 0)
+	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
+		      scm_from_latin1_string("pcre-fullinfo"),
+		      pcre_error_to_string(rc), SCM_EOL, SCM_BOOL_F);
+
+    return rv;
+}
+
 static int print_pcre(SCM pcre_smob, SCM port, scm_print_state *pstate)
 {
     struct guile_pcre *regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
@@ -358,6 +434,26 @@ void init_pcre(void)
 	{ "PCRE_CONFIG_MATCH_LIMIT_RECURSION", PCRE_CONFIG_MATCH_LIMIT_RECURSION, },
 	{ "PCRE_CONFIG_STACKRECURSE", PCRE_CONFIG_STACKRECURSE, },
 	{ "PCRE_CONFIG_JITTARGET", PCRE_CONFIG_JITTARGET, },
+	{ "PCRE_INFO_BACKREFMAX", PCRE_INFO_BACKREFMAX, },
+	{ "PCRE_INFO_CAPTURECOUNT", PCRE_INFO_CAPTURECOUNT, },
+	{ "PCRE_INFO_FIRSTBYTE", PCRE_INFO_FIRSTBYTE, },
+	{ "PCRE_INFO_HASCRORLF", PCRE_INFO_HASCRORLF, },
+	{ "PCRE_INFO_JITSIZE", PCRE_INFO_JITSIZE, },
+	{ "PCRE_INFO_LASTLITERAL", PCRE_INFO_LASTLITERAL, },
+	{ "PCRE_INFO_MAXLOOKBEHIND", PCRE_INFO_MAXLOOKBEHIND, },
+	{ "PCRE_INFO_MINLENGTH", PCRE_INFO_MINLENGTH, },
+	{ "PCRE_INFO_NAMECOUNT", PCRE_INFO_NAMECOUNT, },
+	{ "PCRE_INFO_NAMEENTRYSIZE", PCRE_INFO_NAMEENTRYSIZE, },
+	{ "PCRE_INFO_OPTIONS", PCRE_INFO_OPTIONS, },
+	{ "PCRE_INFO_FIRSTCHARACTERFLAGS", PCRE_INFO_FIRSTCHARACTERFLAGS, },
+	{ "PCRE_INFO_REQUIREDCHARFLAGS", PCRE_INFO_REQUIREDCHARFLAGS, },
+	{ "PCRE_INFO_SIZE", PCRE_INFO_SIZE, },
+	{ "PCRE_INFO_STUDYSIZE", PCRE_INFO_STUDYSIZE, },
+	{ "PCRE_INFO_FIRSTCHARACTER", PCRE_INFO_FIRSTCHARACTER, },
+	{ "PCRE_INFO_REQUIREDCHAR", PCRE_INFO_REQUIREDCHAR, },
+	{ "PCRE_INFO_JCHANGED", PCRE_INFO_JCHANGED, },
+	{ "PCRE_INFO_JIT", PCRE_INFO_JIT, },
+	{ "PCRE_INFO_OKPARTIAL", PCRE_INFO_OKPARTIAL, },
     };
     size_t i;
 
@@ -369,6 +465,7 @@ void init_pcre(void)
     scm_c_define_gsubr("pcre-study", 1, 1, 0, guile_pcre_study);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
     scm_c_define_gsubr("pcre-config", 1, 0, 0, guile_pcre_config);
+    scm_c_define_gsubr("pcre-get-fullinfo", 2, 0, 0, guile_pcre_fullinfo);
     for (i = 0; i < ARRAY_SIZE(symbol_table); ++i) {
 	scm_c_define(symbol_table[i].name, scm_from_int(symbol_table[i].value));
 	scm_c_export(symbol_table[i].name, NULL);

@@ -1,5 +1,6 @@
 (define-module (guile-pcre)
-  #:export (make-pcre pcre-compile pcre-study pcre-exec pcre-config))
+  #:export (make-pcre pcre-compile pcre-study pcre-exec pcre-config
+		      pcre-fullinfo))
 
 (eval-when
  (compile load eval)
@@ -139,6 +140,68 @@
   (syntax-rules ()
     ((make-pcre pattern flags ...)
      (make-helper 0 0 pattern flags ...))))
+
+(define-syntax pcre-fullinfo
+  (syntax-rules (PCRE_INFO_BACKREFMAX
+		 PCRE_INFO_CAPTURECOUNT
+		 PCRE_INFO_FIRSTBYTE
+		 PCRE_INFO_HASCRORLF
+		 PCRE_INFO_JITSIZE
+		 PCRE_INFO_LASTLITERAL
+		 PCRE_INFO_MAXLOOKBEHIND
+		 PCRE_INFO_MINLENGTH
+		 PCRE_INFO_NAMECOUNT
+		 PCRE_INFO_NAMEENTRYSIZE
+		 PCRE_INFO_OPTIONS
+		 PCRE_INFO_FIRSTCHARACTERFLAGS
+		 PCRE_INFO_REQUIREDCHARFLAGS
+		 PCRE_INFO_SIZE
+		 PCRE_INFO_STUDYSIZE
+		 PCRE_INFO_FIRSTCHARACTER
+		 PCRE_INFO_REQUIREDCHAR
+		 PCRE_INFO_JCHANGED
+		 PCRE_INFO_JIT
+		 PCRE_INFO_OKPARTIAL)
+    ((_ regexp                 PCRE_INFO_BACKREFMAX)
+     (pcre-get-fullinfo regexp PCRE_INFO_BACKREFMAX))
+    ((_ regexp                 PCRE_INFO_CAPTURECOUNT)
+     (pcre-get-fullinfo regexp PCRE_INFO_CAPTURECOUNT))
+    ((_ regexp                 PCRE_INFO_FIRSTBYTE)
+     (pcre-get-fullinfo regexp PCRE_INFO_FIRSTBYTE))
+    ((_ regexp                 PCRE_INFO_HASCRORLF)
+     (pcre-get-fullinfo regexp PCRE_INFO_HASCRORLF))
+    ((_ regexp                 PCRE_INFO_JITSIZE)
+     (pcre-get-fullinfo regexp PCRE_INFO_JITSIZE))
+    ((_ regexp                 PCRE_INFO_LASTLITERAL)
+     (pcre-get-fullinfo regexp PCRE_INFO_LASTLITERAL))
+    ((_ regexp                 PCRE_INFO_MAXLOOKBEHIND)
+     (pcre-get-fullinfo regexp PCRE_INFO_LASTLITERAL))
+    ((_ regexp                 PCRE_INFO_MINLENGTH)
+     (pcre-get-fullinfo regexp PCRE_INFO_MINLENGTH))
+    ((_ regexp                 PCRE_INFO_NAMECOUNT)
+     (pcre-get-fullinfo regexp PCRE_INFO_NAMECOUNT))
+    ((_ regexp                 PCRE_INFO_NAMEENTRYSIZE)
+     (pcre-get-fullinfo regexp PCRE_INFO_NAMEENTRYSIZE))
+    ((_ regexp                 PCRE_INFO_OPTIONS)
+     (pcre-get-fullinfo regexp PCRE_INFO_OPTIONS))
+    ((_ regexp                 PCRE_INFO_FIRSTCHARACTERFLAGS)
+     (pcre-get-fullinfo regexp PCRE_INFO_FIRSTCHARACTERFLAGS))
+    ((_ regexp                 PCRE_INFO_REQUIREDCHARFLAGS)
+     (pcre-get-fullinfo regexp PCRE_INFO_REQUIREDCHARFLAGS))
+    ((_ regexp                 PCRE_INFO_SIZE)
+     (pcre-get-fullinfo regexp PCRE_INFO_SIZE))
+    ((_ regexp                 PCRE_INFO_STUDYSIZE)
+     (pcre-get-fullinfo regexp PCRE_INFO_STUDYSIZE))
+    ((_ regexp                 PCRE_INFO_FIRSTCHARACTER)
+     (pcre-get-fullinfo regexp PCRE_INFO_FIRSTCHARACTER))
+    ((_ regexp                 PCRE_INFO_REQUIREDCHAR)
+     (pcre-get-fullinfo regexp PCRE_INFO_REQUIREDCHAR))
+    ((_ regexp                 PCRE_INFO_JCHANGED)
+     (pcre-get-fullinfo regexp PCRE_INFO_JCHANGED))
+    ((_ regexp                 PCRE_INFO_JIT)
+     (pcre-get-fullinfo regexp PCRE_INFO_JIT))
+    ((_ regexp                 PCRE_INFO_OKPARTIAL)
+     (pcre-get-fullinfo regexp PCRE_INFO_OKPARTIAL))))
 
 (define (pcre-compile pattern . flags)
   (pcre-do-compile pattern flags))
