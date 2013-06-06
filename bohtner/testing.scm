@@ -24,7 +24,8 @@
  (chicken
   (require-extension syntax-case))
  (guile
-  (use-modules (ice-9 syncase) (srfi srfi-9)
+  (use-modules ;; (ice-9 syncase) not needed in guile2
+	       (srfi srfi-9)
 	       ;;(srfi srfi-34) (srfi srfi-35) - not in Guile 1.6.7
 	       (srfi srfi-39)))
  (sisc
@@ -963,7 +964,7 @@
   (let* ((port (open-input-string string))
 	 (form (read port)))
     (if (eof-object? (read-char port))
-	(eval form)
+	(primitive-eval form)
 	(cond-expand
 	 (srfi-23 (error "(not at eof)"))
 	 (else "error")))))
