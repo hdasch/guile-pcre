@@ -376,6 +376,18 @@ static size_t free_pcre(SCM pcre_smob)
     return 0;
 }
 
+static SCM equalp_pcre(SCM a, SCM b)
+{
+    struct guile_pcre *ra = (struct guile_pcre *) SCM_SMOB_DATA(a);
+    struct guile_pcre *rb = (struct guile_pcre *) SCM_SMOB_DATA(b);
+
+    
+    scm_assert_smob_type(pcre_tag, a);	/* Probably don't need to verify type */
+    scm_assert_smob_type(pcre_tag, b);	/* since equalp isn't directly called */
+					/* by user. */
+    return scm_equal_p(ra->pattern, rb->pattern);
+}
+
 void init_pcre(void)
 {
     struct name_value symbol_table [] = {
@@ -461,6 +473,7 @@ void init_pcre(void)
     scm_set_smob_print(pcre_tag, print_pcre);
     scm_set_smob_mark(pcre_tag, mark_pcre);
     scm_set_smob_free(pcre_tag, free_pcre);
+    scm_set_smob_equalp(pcre_tag, equalp_pcre);
     scm_c_define_gsubr("pcre-do-compile", 1, 1, 0, guile_pcre_compile);
     scm_c_define_gsubr("pcre-study", 1, 1, 0, guile_pcre_study);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
