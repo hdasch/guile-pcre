@@ -138,6 +138,8 @@
 
 (define-syntax make-pcre
   (syntax-rules ()
+    ((make-pcre pattern flag)
+     (pcre-study (pcre-compile pattern flag) 0))
     ((make-pcre pattern flags ...)
      (make-helper 0 0 pattern flags ...))))
 
