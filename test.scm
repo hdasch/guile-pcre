@@ -11,6 +11,7 @@
 	     (guile-pcre)
 	     (bohtner srfi-64))
 
+(format #t "pcre Version: ~a\n" (pcre-version))
 (format #t "~a\n" (pcre-exec (make-pcre "([[:digit:].]+)abc") "123.456abc789"))
 (format #t "~a\n" (pcre-exec (make-pcre "abc") "123abc456"))
 

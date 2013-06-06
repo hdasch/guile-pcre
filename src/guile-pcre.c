@@ -347,6 +347,11 @@ static SCM guile_pcre_p(SCM pcre_smob)
 	return scm_from_bool(SCM_SMOB_PREDICATE(pcre_tag, pcre_smob));
 }
 
+static SCM guile_pcre_version(void)
+{
+	return scm_from_latin1_string(pcre_version());
+}
+
 static int print_pcre(SCM pcre_smob, SCM port, scm_print_state *pstate)
 {
     struct guile_pcre *regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
@@ -485,6 +490,7 @@ void init_pcre(void)
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
     scm_c_define_gsubr("pcre-config", 1, 0, 0, guile_pcre_config);
     scm_c_define_gsubr("pcre-get-fullinfo", 2, 0, 0, guile_pcre_fullinfo);
+    scm_c_define_gsubr("pcre-version", 0, 0, 0, guile_pcre_version);
     for (i = 0; i < ARRAY_SIZE(symbol_table); ++i) {
 	scm_c_define(symbol_table[i].name, scm_from_int(symbol_table[i].value));
 	scm_c_export(symbol_table[i].name, NULL);
