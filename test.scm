@@ -24,6 +24,7 @@
 
 
 (test-begin "pcre-unit-test")
+(test-assert "pcre?" (pcre? (make-pcre "([[:digit:].]+)abc")))
 (test-assert "pcre-exec "
 	     (pcre-exec (make-pcre "abc" PCRE_CASELESS) "123abc456"))
 

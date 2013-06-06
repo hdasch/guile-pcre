@@ -1,5 +1,5 @@
 (define-module (guile-pcre)
-  #:export (pcre-compile pcre-study pcre-exec pcre-config)
+  #:export (pcre? pcre-compile pcre-study pcre-exec pcre-config)
   #:export-syntax (make-pcre pcre-fullinfo))
 
 (eval-when

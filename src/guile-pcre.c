@@ -342,6 +342,11 @@ static SCM guile_pcre_fullinfo(SCM pcre_smob, SCM what)
     return rv;
 }
 
+static SCM guile_pcre_p(SCM pcre_smob)
+{
+	return scm_from_bool(SCM_SMOB_PREDICATE(pcre_tag, pcre_smob));
+}
+
 static int print_pcre(SCM pcre_smob, SCM port, scm_print_state *pstate)
 {
     struct guile_pcre *regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
@@ -474,6 +479,7 @@ void init_pcre(void)
     scm_set_smob_mark(pcre_tag, mark_pcre);
     scm_set_smob_free(pcre_tag, free_pcre);
     scm_set_smob_equalp(pcre_tag, equalp_pcre);
+    scm_c_define_gsubr("pcre?", 1, 0, 0, guile_pcre_p);
     scm_c_define_gsubr("pcre-do-compile", 1, 1, 0, guile_pcre_compile);
     scm_c_define_gsubr("pcre-study", 1, 1, 0, guile_pcre_study);
     scm_c_define_gsubr("pcre-exec", 2, 0, 0, guile_pcre_exec);
