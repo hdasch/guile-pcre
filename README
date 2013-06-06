@@ -1,8 +1,55 @@
-Temporary module/extension installation:
+README for guile-pcre
+---------------------
 
-prefix=${prefix:-~/local/}   # or "/usr"
-guile_dir=${prefix}/share/guile/2.2
-pwd=$(pwd)
-sudo mkdir -p ${guile_dir}/extensions
-(cd ${guile_dir}; sudo ln -s ${pwd}/guile-pcre.scm .)
-(cd ${guile_dir}/extensions; sudo ln -s ${pwd}/libguile-pcre.so .)
+guile-pcre is a set of language bindings to provide guile programs
+with access to pcre (Perl-compatible regular expression library).
+
+VERSION
+-------
+
+This is verion 1.0 of guile-pcre.
+
+LIMITATIONS
+-----------
+
+No attempt has been made to support pcre external tables (locale
+overrides), or external patterns, or reference counting.  As such
+there's no support for:
+
+ - pcre_maketables
+ - pcre_config flags PCRE_INFO_DEFAULT_TABLES, PCRE_INFO_FIRSTTABLE,
+                     or PCRE_INFO_NAMETABLE.
+ - pcre_pattern_to_host_byte_order
+ - pcre_refcount
+
+Partial matching should be supported later.
+Extracting named substrings from match should be supported later.
+
+API
+---
+(pcre-version)
+(make-pcre <pattern> <flags> ...)
+(pcre? <pcre>)
+(pcre-compile <pcre> <flags> ...)
+(pcre-study <pcre> <flags> ...)
+(pcre-exec <pcre> <input-string>)
+(pcre-config <flag>)
+(pcre-fullinfo <pcre> <flag>)
+
+LICENSE
+-------
+
+Part of the motivation for this work was an apparent absense of
+similar functionality elsewhere.  It looks like Rob Browning started
+down this path is 2002 bug got bogged down in license incompatibility.
+
+It still isn't clear that Rob Browning could have released what he had
+done, but pcre is now listed in the FSF free software directory
+http://directory.fsf.org/wiki/PCRE.  So it seems safe, now, to use
+pcre from guile programs.
+
+GPL Version 3 was selected because guile is licensed under LICENSE.
+Since guile-pcre is fully dependent on guile, there seems no need for
+an alternate license.
+
+In the event that license incompatability becomes an issue, the author 

@@ -1,0 +1,4 @@
+Initial work performed by Hugh Daschbach <hdasch@gmail.com>
+
+Unit test framework (srfi-64) implemented by Per
+Bohtner. (http://srfi.schemers.org/srfi-64/)
