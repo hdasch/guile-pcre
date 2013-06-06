@@ -1,6 +1,6 @@
 (define-module (guile-pcre)
-  #:export (make-pcre pcre-compile pcre-study pcre-exec pcre-config
-		      pcre-fullinfo))
+  #:export (pcre-compile pcre-study pcre-exec pcre-config)
+  #:export-syntax (make-pcre pcre-fullinfo))
 
 (eval-when
  (compile load eval)
