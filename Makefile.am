@@ -3,3 +3,7 @@
 
 SUBDIRS = src
 ACLOCAL_AMFLAGS = -I m4
+
+.PHONY: check
+check:
+	GUILE_LOAD_PATH=. ./test.scm
