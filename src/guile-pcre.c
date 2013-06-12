@@ -390,12 +390,25 @@ static SCM equalp_pcre(SCM a, SCM b)
 {
     struct guile_pcre *ra = (struct guile_pcre *) SCM_SMOB_DATA(a);
     struct guile_pcre *rb = (struct guile_pcre *) SCM_SMOB_DATA(b);
-
+    unsigned long int flags_a, flags_b;
+    int rc;
     
     scm_assert_smob_type(pcre_tag, a);	/* Probably don't need to verify type */
     scm_assert_smob_type(pcre_tag, b);	/* since equalp isn't directly called */
 					/* by user. */
-    return scm_equal_p(ra->pattern, rb->pattern);
+    if (!scm_equal_p(ra->pattern, rb->pattern))
+	    return SCM_BOOL_F;
+    rc = pcre_fullinfo(ra->regexp, ra->extra, PCRE_INFO_OPTIONS, &flags_a);
+    if (rc != 0)
+	    scm_error_scm(scm_from_latin1_symbol("pcre?"),
+			  scm_from_latin1_string("pcre-fullinfo"),
+			  pcre_error_to_string(rc), SCM_EOL, SCM_BOOL_F);
+    rc = pcre_fullinfo(rb->regexp, rb->extra, PCRE_INFO_OPTIONS, &flags_b);
+    if (rc != 0)
+	    scm_error_scm(scm_from_latin1_symbol("pcre?"),
+			  scm_from_latin1_string("pcre-fullinfo"),
+			  pcre_error_to_string(rc), SCM_EOL, SCM_BOOL_F);
+    return flags_a == flags_b ? SCM_BOOL_T : SCM_BOOL_F;
 }
 
 void init_pcre(void)

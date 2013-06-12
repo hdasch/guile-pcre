@@ -72,4 +72,11 @@
        (re (make-pcre "abc" options)))
   (test-eq "caseless" options (pcre-fullinfo re PCRE_INFO_OPTIONS))
   (test-eq "backref" 0 (pcre-fullinfo re PCRE_INFO_BACKREFMAX)))
+(test-assert "equalp"
+	     (equal? (make-pcre
+		      "/(?im)abc(?-i)d/" PCRE_EXTENDED)
+		     (make-pcre
+			 "/(?im)abc(?-i)d/"
+			 PCRE_EXTENDED
+			 PCRE_STUDY_JIT_COMPILE)))
 (test-end "pcre-unit-test")
