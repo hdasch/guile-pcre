@@ -9,18 +9,24 @@ VERSION
 
 This is verion 1.0 of guile-pcre.
 
+COMPATIBILITY
+-------------
+
+This verion of guile-pcre has been tested with guile 2.1 and pcre 8.32.
+
 LIMITATIONS
 -----------
 
 No attempt has been made to support pcre external tables (locale
-overrides), or external patterns, or reference counting.  As such
-there's no support for:
+overrides), external patterns, reference counting, or the alternative
+matcher.  As such there's no support for:
 
  - pcre_maketables
  - pcre_config flags PCRE_INFO_DEFAULT_TABLES, PCRE_INFO_FIRSTTABLE,
                      or PCRE_INFO_NAMETABLE.
  - pcre_pattern_to_host_byte_order
  - pcre_refcount
+ - pcre_dfa_exec
 
 Partial matching should be supported later.
 Extracting named substrings from match should be supported later.
