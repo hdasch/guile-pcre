@@ -60,6 +60,14 @@
 	       (#(string (0 . 26) (0 . 3) (4 . 9) (10 . 15) (16 . 19) (20 . 26)) #t)
 	       (_ #f)))
 
+(let ((m (pcre-exec (make-pcre
+		     "(\\w+)\\s+(\\w+)\\s+(\\w+)\\s+(\\w+)\\s+(\\w+)"
+		     PCRE_STUDY_JIT_COMPILE)
+		    " The quick brown fox jumped over")))
+  (test-equal "match prefix" (match:prefix m) " ")
+  (test-equal "match substring " (match:substring m 2) "quick")
+  (test-equal "match suffix" (match:suffix m) " over"))
+
 (test-eqv "single utf code"
 	  1 (apply + (map (lambda (utf) (if (pcre-config utf) 1 0))
 			  (list PCRE_CONFIG_UTF8
