@@ -68,6 +68,10 @@
   (test-equal "match substring " (match:substring m 2) "quick")
   (test-equal "match suffix" (match:suffix m) " over"))
 
+(let ((re (make-pcre
+	   "(\\w+)\\s+(\\w+)\\s+(\\w+)\\s+(\\w+)\\s+(\\w+)")))
+  (test-eq "capture count" (pcre-fullinfo re PCRE_INFO_CAPTURECOUNT) 5))
+
 (test-eqv "single utf code"
 	  1 (apply + (map (lambda (utf) (if (pcre-config utf) 1 0))
 			  (list PCRE_CONFIG_UTF8
