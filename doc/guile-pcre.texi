@@ -1,0 +1,378 @@
+\input texinfo
+@c -*-texinfo-*-
+@setfilename guile-pcre.info
+@documentencoding UTF-8
+@settitle guile-pcre User Manual
+
+@copying
+This manual docments guile-pcre version 1.0.
+
+Copyright (C) 2013
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+@end quotation
+@end copying
+
+@node top
+@top guile-pcre User Manual
+
+guile-pcre is a set of Guile language bindings for PCRE (Perl-compatible
+regular expression library).
+
+For more information regarding Guile, see the Guile website
+@uref{http://www.gnu.org/software/guile/}.  For more informatio
+regarding PCRE, see @uref{http://www.pcre.org/}.
+
+@menu
+* Introduction::
+* Acknowlegements::
+* PCRE Regular Expressions::
+* PCRE library configuration::
+@end menu
+
+@node Introduction
+@chapter Introduction
+
+The objective of guile-pcre is to provide an alternative to the native
+Guile regular expression engine, taking advantage of performance
+improments and features like named regular expressions inspired by
+Perl's regular expression implementation (though support for named
+regular expressions is not yet implemented).  Where possible guile-pcre
+attempts to provide a drop-in replacement for Guile's native regular
+expressions.  Specifically, an attempt has been made to generate match
+results that compatible with Guile's native implementation.
+
+No attempt will be made here to duplicate documentation found in either
+the Guile Reference Manual or the PCRE manual pages.  This document
+assumes the reader is familiar with those other references.
+
+@node Acknowlegements
+@chapter Acknowlegements
+
+The unit tests, such as they are, are made possible by Per Bohtner's
+srfi-64 package (@uref{http://srfi.schemers.org/srfi-64/srfi-64.html}).
+
+@node PCRE Regular Expressions
+@chapter PCRE Regular Expressions
+
+Like Guile's native regular expression implementation, regular
+expressions are compliled to an internal object which is used as a
+pattern to match one or more strings.  Each pattern match produces a
+match object.
+
+PCRE provides two interfaces for compiling regular expression strings
+into internal form: @code{pcre_compile} and @code{pcre_compile2}.  It
+also provides a separate procedure to optimize a compiled regular
+expression object: @code{pcre_study}.
+
+guile-pcre provides access to similar Guile forms to compile regular
+expressions.  And, of course, it provides a Guile procedure to attempt to
+match a guile-pcre compiled regular expression against a string.
+
+guile-pcre also provides Guile procedure to query the configuration of
+the PCRE library and extract information from compiled regular
+expressions.
+
+@menu
+* Compiling regular expressions::
+* Matching Regular Expressions::
+* Type predicate; equality test::
+* PCRE regular expression properties::
+@end menu
+
+@node Compiling regular expressions
+@section Compiling regular expressions
+
+guile-pcre provides wrapper forms for PCRE's @code{pcre_compile2} and
+@code{pcre_study} API functions.  And since it seems likely that most
+regular expressions used in Guile applications would benefit from being
+optimized by @code{pcre_study}, guile-pcre provides a convienience form
+tha performs both operations in a single invocation.
+
+@deffn {Scheme Procedure} pcre-compile (@var{pattern} [@var{flags}@dots{}])
+
+@code{pcre-compile} translates a pattern string (regular expression)
+into an internal pcre object.  The flags parameters may be one or more
+of the following, or a numerical argument representing the inclusive or
+of the following:
+
+@itemize @bullet
+@item
+PCRE_CASELESS
+@item
+PCRE_MULTILINE
+@item
+PCRE_DOTALL
+@item
+PCRE_EXTENDED
+@item
+PCRE_ANCHORED
+@item
+PCRE_DOLLAR_ENDONLY
+@item
+PCRE_EXTRA
+@item
+PCRE_NOTBOL
+@item
+PCRE_NOTEOL
+@item
+PCRE_UNGREEDY
+@item
+PCRE_NOTEMPTY
+@item
+PCRE_UTF8
+@item
+PCRE_NO_AUTO_CAPTURE
+@item
+PCRE_NO_UTF8_CHECK
+@item
+PCRE_AUTO_CALLOUT
+@item
+PCRE_PARTIAL_SOFT
+@item
+PCRE_PARTIAL
+@item
+PCRE_DFA_SHORTEST
+@item
+PCRE_DFA_RESTART
+@item
+PCRE_FIRSTLINE
+@item
+PCRE_DUPNAMES
+@item
+PCRE_NEWLINE_CR
+@item
+PCRE_NEWLINE_LF
+@item
+PCRE_NEWLINE_CRLF
+@item
+PCRE_NEWLINE_ANY
+@item
+PCRE_NEWLINE_ANYCRLF
+@item
+PCRE_BSR_ANYCRLF
+@item
+PCRE_BSR_UNICODE
+@item
+PCRE_JAVASCRIPT_COMPAT
+@item
+PCRE_NO_START_OPTIMIZE
+@item
+PCRE_NO_START_OPTIMISE
+@item
+PCRE_PARTIAL_HARD
+@item
+PCRE_NOTEMPTY_ATSTART
+@item
+PCRE_UCP
+
+@end itemize
+
+@end deffn
+
+@deffn {Scheme Procedure} pcre-study (@var{pcre} [@var{flags}@dots{}])
+
+@code{pcre-study} takes a pcre object produced by @code{pcre-compile}
+and optimizes the internal representation.  Additional flags are
+supported during this optimization pass, which may be one or more of the
+following or a numerical argument representing the inclusive or of the
+following:
+
+@itemize @bullet
+@item
+PCRE_STUDY_JIT_COMPILE
+@item
+PCRE_STUDY_JIT_PARTIAL_SOFT_COMPILE
+@item
+PCRE_STUDY_JIT_PARTIAL_HARD_COMPILE
+@item
+PCRE_STUDY_EXTRA_NEEDED
+@end itemize
+
+@end deffn
+
+@deffn {Scheme Syntax} make-pcre (@var{pattern} @var{flags} ...)
+@code{make-pcre} combines the action of @code{pcre-compile} and
+@code{pcre-study} in a single procedure.  Any of the flags passed to
+@code{pcre-compile} or @code{pcre-study} may be passed to make-pcre.
+The syntax evaluation of the form passes flags associated with
+@code{pcre-compile} to the @code{pcre-compile} phase and flags associated
+with @code{pcre-study} to the @code{pcre-study} phase.
+@end deffn
+
+For example:
+@example
+(pcre-study (pcre-compile "(\\w+)\\s+(\\w+)"
+                          PCRE_CASELESS
+                          PCRE_MULTILINE)
+            PCRE_STUDY_JIT_COMPILE)
+@end example
+
+is equivalent to:
+
+@example
+(make-pcre "(\\w+)\\s+(\\w+)"
+           PCRE_CASELESS
+           PCRE_MULTILINE
+           PCRE_STUDY_JIT_COMPILE)
+@end example
+
+@node Matching Regular Expressions
+@section Matching Regular Expressions
+
+Matching is the process of comparing a regular expression to a string.
+This is performed by the @code{pcre-exec} procedure.  This produces a
+``match structure'', the same kind of object returned by
+@code{string-match} (part of Guile native regular expression support).
+As such, the Guile procedures @code{match:string},
+@code{match:substring}, @code{match:prefix}, and @code{match:suffix}
+work correctly the the result of @code{pcre-exec}.
+
+@deffn {Scheme Procedure} pcre-exec (@var{re} @var{input-string})
+
+Compare @var{input-string} to compiled regular expression @var{re}.  Return
+#f if  @var{input-string} doesn't match  @var{re}, or a ``match
+structure'' that describes the match.
+
+@example
+(pcre-exec (make-pcre "\\b123") "abc 123 xyz")
+@result{} #("abc 123 xyz" (4 . 7))
+
+(pcre-exec (make-pcre "\\b123") "abc123 xyz")
+@result{} #f
+@end example
+
+@end deffn
+
+@node Type predicate; equality test
+@section Type predicate; equality test
+
+Most Guile objects are supported by a type predicate and comparison
+operation.  guile-pcre objcects are no different.
+
+@deffn {Scheme Procedure} pcre? (@var{re})
+Return #t if @var{re} represents a guile-pcre compiled regular
+expression, #f otherwise.
+@end deffn
+
+@deffn {Scheme Procedure} equal? (@var{re_a} @var{re_b})
+Two guile-pcre objects are considered @code{equal?} if both regular
+expressions were compiled with the same pattern string and the same
+option flags.  Note: study flags, like @code{PCRE_STUDY_JIT_COMPILE} are
+not considered when testing @code{equal?}.
+@end deffn
+
+@node PCRE regular expression properties
+@section PCRE regular expression properties
+
+The PCRE library provides access to several properties of a compiled
+regular expression through the @code{pcre_fullinfo} function.  This
+function is exposed by @code{guile-pcre} through the Guile procedure
+@code{pcre-fullinfo}
+
+@deffn {Scheme Procedure} pcre-fullinfo (@var{re} @var{flag})
+
+Request some property of compiled regular expression @var{re} from PCRE
+library, as specified by @var{flag}.  Where @var{flag} is one of:
+
+@itemize @bullet
+@item
+PCRE_INFO_BACKREFMAX
+@item
+PCRE_INFO_CAPTURECOUNT
+@item
+PCRE_INFO_FIRSTBYTE
+@item
+PCRE_INFO_HASCRORLF
+@item
+PCRE_INFO_JITSIZE
+@item
+PCRE_INFO_LASTLITERAL
+@item
+PCRE_INFO_MAXLOOKBEHIND
+@item
+PCRE_INFO_MINLENGTH
+@item
+PCRE_INFO_NAMECOUNT
+@item
+PCRE_INFO_NAMEENTRYSIZE
+@item
+PCRE_INFO_OPTIONS
+@item
+PCRE_INFO_FIRSTCHARACTERFLAGS
+@item
+PCRE_INFO_REQUIREDCHARFLAGS
+@item
+PCRE_INFO_SIZE
+@item
+PCRE_INFO_STUDYSIZE
+@item
+PCRE_INFO_FIRSTCHARACTER
+@item
+PCRE_INFO_REQUIREDCHAR
+@item
+PCRE_INFO_JCHANGED
+@item
+PCRE_INFO_JIT
+@item
+PCRE_INFO_OKPARTIAL
+@end itemize
+
+The returned value will be a boolean (@code{#f} or @code{#t}), integer,
+or string as, depending on the value of @var{flag}, as described in the
+@code{pcreapi} man page.
+
+@end deffn
+
+@node PCRE library configuration
+@chapter PCRE library configuration
+
+The PCRE library provides a function to determine the library's compile
+time option settings.  The @code{guile-pcre} module supports these
+inquiry facilities with @code{pcre-config}.
+
+@deffn {Scheme Procedure} pcre-config (@var{re} @var{flag})
+
+Return the @code{pcre_config} value associated with @var{flag}, where
+@var{flag} is one of:
+
+@itemize @bullet
+@item
+PCRE_CONFIG_UTF8
+@item
+PCRE_CONFIG_UTF16
+@item
+PCRE_CONFIG_UTF32
+@item
+PCRE_CONFIG_UNICODE_PROPERTIES
+@item
+PCRE_CONFIG_JIT
+@item
+PCRE_CONFIG_BSR
+@item
+PCRE_CONFIG_NEWLINE
+@item
+PCRE_CONFIG_LINK_SIZE
+@item
+PCRE_CONFIG_POSIX_MALLOC_THRESHOLD
+@item
+PCRE_CONFIG_STACKRECURSE
+@item
+PCRE_CONFIG_MATCH_LIMIT
+@item
+PCRE_CONFIG_MATCH_LIMIT_RECURSION
+@item
+PCRE_CONFIG_JITTARGET
+@end itemize
+
+The returned value will be a boolean (@code{#f} or @code{#t}), integer,
+or string as, depending on the value of @var{flag}, as described in the
+@code{pcreapi} man page.
+
+@end deffn
+
+@bye

@@ -33,14 +33,10 @@ Extracting named substrings from match should be supported later.
 
 API
 ---
-(pcre-version)
-(make-pcre <pattern> <flags> ...)
-(pcre? <pcre>)
-(pcre-compile <pcre> <flags> ...)
-(pcre-study <pcre> <flags> ...)
-(pcre-exec <pcre> <input-string>)
-(pcre-config <flag>)
-(pcre-fullinfo <pcre> <flag>)
+
+The API is described in the guile-pcre.info file in the doc directory.
+Or use "make html" and point your browser to
+doc/guile-pcre.html/index.html.
 
 LICENSE
 -------
