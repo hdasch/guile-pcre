@@ -240,9 +240,11 @@ structure'' that describes the match.
 
 @example
 (pcre-exec (make-pcre "\\b123") "abc 123 xyz")
+
 @result{} #("abc 123 xyz" (4 . 7))
 
 (pcre-exec (make-pcre "\\b123") "abc123 xyz")
+
 @result{} #f
 @end example
 
@@ -338,6 +340,7 @@ version.
 Returns a PCRE library version string.
 @example
 (pcre-version)
+
 @result{} "8.33 2013-05-28"     (depends on library)
 @end example
 @end deffn
@@ -346,7 +349,7 @@ The PCRE library provides a function to determine the library's compile
 time option settings.  The @code{guile-pcre} module supports these
 inquiry facilities with @code{pcre-config}.
 
-@deffn {Scheme Procedure} pcre-config (@var{re} @var{flag})
+@deffn {Scheme Procedure} pcre-config (@var{flag})
 
 Return the @code{pcre_config} value associated with @var{flag}, where
 @var{flag} is one of:
@@ -388,9 +391,11 @@ For example:
 
 @example
 (pcre-config PCRE_CONFIG_JIT)
+
 @result{} #t                                      (depending on configuration)
 
 (pcre-config PCRE_CONFIG_JITTARGET)
+
 @result{} "x86 64bit (little endian + unaligned)" (depending on configuration)
 @end example
 
