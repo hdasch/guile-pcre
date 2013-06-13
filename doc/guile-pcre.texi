@@ -23,7 +23,7 @@ This file documents guile-pcre.
 @copying
 This manual documents guile-pcre version @value{VERSION}.
 
-Copyright (C) 2013
+Copyright (C) 2013 Hugh Daschbach
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document

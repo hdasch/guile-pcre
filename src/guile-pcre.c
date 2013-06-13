@@ -1,6 +1,6 @@
-/* image-type.c
+/* guile-pcre.c -*- c-basic-offset: 4 -*-
  *
- * Copyright (C) 1998, 2000, 2004, 2006, 2011 Free Software Foundation, Inc.
+ * Copyright (C) 2012-210 Hugh Daschbach
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
