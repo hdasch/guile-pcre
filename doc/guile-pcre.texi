@@ -5,7 +5,7 @@
 @settitle guile-pcre User Manual
 
 @copying
-This manual docments guile-pcre version 1.0.
+This manual documents guile-pcre version 1.0.
 
 Copyright (C) 2013
 
@@ -24,12 +24,12 @@ guile-pcre is a set of Guile language bindings for PCRE (Perl-compatible
 regular expression library).
 
 For more information regarding Guile, see the Guile website
-@uref{http://www.gnu.org/software/guile/}.  For more informatio
+@uref{http://www.gnu.org/software/guile/}.  For more information
 regarding PCRE, see @uref{http://www.pcre.org/}.
 
 @menu
 * Introduction::
-* Acknowlegements::
+* Acknowledgments::
 * PCRE Regular Expressions::
 * PCRE library configuration::
 @end menu
@@ -39,7 +39,7 @@ regarding PCRE, see @uref{http://www.pcre.org/}.
 
 The objective of guile-pcre is to provide an alternative to the native
 Guile regular expression engine, taking advantage of performance
-improments and features like named regular expressions inspired by
+improvements and features like named regular expressions inspired by
 Perl's regular expression implementation (though support for named
 regular expressions is not yet implemented).  Where possible guile-pcre
 attempts to provide a drop-in replacement for Guile's native regular
@@ -50,8 +50,8 @@ No attempt will be made here to duplicate documentation found in either
 the Guile Reference Manual or the PCRE manual pages.  This document
 assumes the reader is familiar with those other references.
 
-@node Acknowlegements
-@chapter Acknowlegements
+@node Acknowledgments
+@chapter Acknowledgments
 
 The unit tests, such as they are, are made possible by Per Bohtner's
 srfi-64 package (@uref{http://srfi.schemers.org/srfi-64/srfi-64.html}).
@@ -60,7 +60,7 @@ srfi-64 package (@uref{http://srfi.schemers.org/srfi-64/srfi-64.html}).
 @chapter PCRE Regular Expressions
 
 Like Guile's native regular expression implementation, regular
-expressions are compliled to an internal object which is used as a
+expressions are compiled to an internal object which is used as a
 pattern to match one or more strings.  Each pattern match produces a
 match object.
 
@@ -90,8 +90,8 @@ expressions.
 guile-pcre provides wrapper forms for PCRE's @code{pcre_compile2} and
 @code{pcre_study} API functions.  And since it seems likely that most
 regular expressions used in Guile applications would benefit from being
-optimized by @code{pcre_study}, guile-pcre provides a convienience form
-tha performs both operations in a single invocation.
+optimized by @code{pcre_study}, guile-pcre provides a convenience form
+that performs both operations in a single invocation.
 
 @deffn {Scheme Procedure} pcre-compile (@var{pattern} [@var{flags}@dots{}])
 
@@ -252,7 +252,7 @@ structure'' that describes the match.
 @section Type predicate; equality test
 
 Most Guile objects are supported by a type predicate and comparison
-operation.  guile-pcre objcects are no different.
+operation.  guile-pcre objects are no different.
 
 @deffn {Scheme Procedure} pcre? (@var{re})
 Return #t if @var{re} represents a guile-pcre compiled regular
@@ -331,6 +331,17 @@ or string as, depending on the value of @var{flag}, as described in the
 @node PCRE library configuration
 @chapter PCRE library configuration
 
+A Guile Scheme procedure is provided to determine the PCRE library
+version.
+
+@deffn {Scheme Procedure} pcre-version
+Returns a PCRE library version string.
+@example
+(pcre-version)
+@result{} "8.33 2013-05-28"     (depends on library)
+@end example
+@end deffn
+
 The PCRE library provides a function to determine the library's compile
 time option settings.  The @code{guile-pcre} module supports these
 inquiry facilities with @code{pcre-config}.
@@ -372,6 +383,16 @@ PCRE_CONFIG_JITTARGET
 The returned value will be a boolean (@code{#f} or @code{#t}), integer,
 or string as, depending on the value of @var{flag}, as described in the
 @code{pcreapi} man page.
+
+For example:
+
+@example
+(pcre-config PCRE_CONFIG_JIT)
+@result{} #t                                      (depending on configuration)
+
+(pcre-config PCRE_CONFIG_JITTARGET)
+@result{} "x86 64bit (little endian + unaligned)" (depending on configuration)
+@end example
 
 @end deffn
 
