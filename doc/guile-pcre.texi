@@ -4,8 +4,24 @@
 @documentencoding UTF-8
 @settitle guile-pcre User Manual
 
+@include version.texi
+
+@dircategory Programming
+@direntry
+* guile-pcre: (guile-pcre).	PCRE library bindings for Guile
+@end direntry
+
+@ifinfo
+This file documents guile-pcre.
+@end ifinfo
+
+@titlepage
+@sp 10
+@subtitle Edition @value{EDITION}, @value{UPDATED}
+@end titlepage
+
 @copying
-This manual documents guile-pcre version 1.0.
+This manual documents guile-pcre version @value{VERSION}.
 
 Copyright (C) 2013
 
@@ -21,7 +37,8 @@ Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 @top guile-pcre User Manual
 
 guile-pcre is a set of Guile language bindings for PCRE (Perl-compatible
-regular expression library).
+regular expression library).  This document describes version
+@value{VERSION} of guile-pcre.
 
 For more information regarding Guile, see the Guile website
 @uref{http://www.gnu.org/software/guile/}.  For more information
