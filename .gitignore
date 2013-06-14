@@ -22,3 +22,4 @@ src/.libs
 src/libguile-pcre.la
 src/libguile_pcre_la-guile-pcre.lo
 src/libguile_pcre_la-guile-pcre.o
+test-driver
