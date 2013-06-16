@@ -17,4 +17,5 @@
 		   test-runner-null
 		   test-runner-create
 		   test-runner-factory))
-(include "testing.scm")
+
+(include-from-path "bohtner/testing.scm")
