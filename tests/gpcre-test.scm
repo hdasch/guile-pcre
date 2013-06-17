@@ -9,7 +9,7 @@
 	     (srfi srfi-1)
 	     (srfi srfi-69)
 	     (guile-pcre)
-	     (bohtner srfi-64))
+ 	     (bohtner srfi-64))
 
 (format #t "pcre Version: ~a\n" (pcre-version))
 (format #t "libpcre configuration:\n")

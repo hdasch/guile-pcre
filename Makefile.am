@@ -3,3 +3,4 @@
 
 SUBDIRS = src doc tests
 ACLOCAL_AMFLAGS = -I m4
+EXTRA_DIST = bohtner
