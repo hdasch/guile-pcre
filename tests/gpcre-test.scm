@@ -11,7 +11,8 @@
 	     (guile-pcre)
  	     (bohtner srfi-64))
 
-(format #t "pcre Version: ~a\n" (pcre-version))
+(format #t "guile-pcre wrapper version: ~a\n" (guile-pcre-version))
+(format #t "pcre library Version: ~a\n" (pcre-version))
 (format #t "libpcre configuration:\n")
 (format #t "  PCRE_CONFIG_UTF8: ~a\n" (pcre-config PCRE_CONFIG_UTF8))
 (format #t "  PCRE_CONFIG_UTF16: ~a\n" (pcre-config PCRE_CONFIG_UTF16))

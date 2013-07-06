@@ -350,8 +350,9 @@ or string as, depending on the value of @var{flag}, as described in the
 @node PCRE library configuration
 @chapter PCRE library configuration
 
-A Guile Scheme procedure is provided to determine the PCRE library
-version.
+A Guile Scheme procedures are provided to determine the underlying
+PCRE library version as well as the @code{guile-pcre} wrapper
+implementation.
 
 @deffn {Scheme Procedure} pcre-version
 Returns a PCRE library version string.
@@ -359,6 +360,16 @@ Returns a PCRE library version string.
 (pcre-version)
 
 @result{} "8.33 2013-05-28"     (depends on library)
+@end example
+@end deffn
+
+@deffn {Scheme Procedure} guile-pcre-version
+Returns a string describing the verion of the @code{guile-pcre}
+Scheme language bindings.
+@example
+(guile-pcre-version)
+
+@result{} "@value{VERSION}"
 @end example
 @end deffn
 

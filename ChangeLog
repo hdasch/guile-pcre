@@ -1,0 +1,9 @@
+2013-07-05  Hugh Daschbach  <hdasch@gmail.com>
+
+	* src/guile-pcre.scm, src/guile-pcre.c: Add guile-pcre-version to
+	report wrapper version rather than pcre library version.
+
+2013-07-05  Hugh Daschbach  <hdasch@gmail.com>
+
+	* configure.ac: First release @ version 0.5
+
