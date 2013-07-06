@@ -27,12 +27,14 @@
 #endif
 
 static scm_t_bits pcre_tag;
+static SCM match_regexp_hash_table;
 
 struct guile_pcre
 {
     pcre *regexp;
     pcre_extra *extra;
     SCM  pattern;
+    SCM  name_table;
 };
 
 struct name_value
@@ -75,6 +77,7 @@ static SCM guile_pcre_compile(SCM pattern, SCM options)
 	    scm_error(scm_from_latin1_symbol("make-pcre-error"),
 		      "make-pcre", "~S: offset ~S", args, SCM_BOOL_F);
 	}
+	regexp->name_table = SCM_EOL;
     }
 
     SCM_NEWSMOB(smob, pcre_tag, regexp);
@@ -148,6 +151,82 @@ static SCM pcre_error_to_string(int rc)
     return scm_from_locale_string(error_buffer);
 }
 
+static int guile_pcre_library_utf(void)
+{
+    int bool_value;
+    int rc;
+
+    rc = pcre_config(PCRE_CONFIG_UTF8, &bool_value);
+    if (rc == 0 && bool_value)
+	return 8;
+
+    rc = pcre_config(PCRE_CONFIG_UTF16, &bool_value);
+    if (rc == 0 && bool_value)
+	return 16;
+
+    rc = pcre_config(PCRE_CONFIG_UTF32, &bool_value);
+    if (rc == 0 && bool_value)
+	return 32;
+
+	    /* Should have been one of the three cases above. */
+    scm_error_scm(scm_from_latin1_symbol("pcre-error"),
+		  scm_from_latin1_string("Internal error"),
+		  pcre_error_to_string(rc), SCM_EOL, SCM_BOOL_F);
+}
+
+static int guile_pcre_match_entry_number(char *name_table, int utf)
+{
+    switch (utf) {
+    case 8:
+    case 16:
+	return (name_table[0] << 8) | name_table[1];
+    case 32:
+	return (((name_table[0] << 8) |
+		 name_table[1] << 8) |
+		name_table[2] << 8) |
+	    name_table[3];
+    }
+    return 0;
+}
+
+static SCM guile_pcre_build_name_alist(const struct guile_pcre *pcre)
+{
+    SCM value = SCM_EOL;
+    int name_count;
+    int entry_size;
+    char *name_table;
+    int utf, offset, entry_number;
+    int rc;
+    int i;
+
+    rc = pcre_fullinfo(pcre->regexp, pcre->extra, PCRE_INFO_NAMECOUNT,
+		       &name_count);
+    if (rc || name_count == 0)
+	return value;
+
+    rc = pcre_fullinfo(pcre->regexp, pcre->extra, PCRE_INFO_NAMEENTRYSIZE,
+		       &entry_size);
+    if (rc)
+	return value;
+
+    rc = pcre_fullinfo(pcre->regexp, pcre->extra, PCRE_INFO_NAMETABLE,
+		       &name_table);
+    if (rc)
+	return value;
+
+    utf = guile_pcre_library_utf();
+    offset = utf == 32 ? 4 : 2;
+
+    for (i = 0; i < name_count; ++i) {
+	entry_number = guile_pcre_match_entry_number(name_table, utf);
+	value = scm_cons(scm_cons(scm_from_locale_symbol(name_table + offset),
+				  scm_from_signed_integer(entry_number)),
+			 value);
+	name_table += entry_size;
+    }
+    return value;
+}
+
 static SCM guile_pcre_exec(SCM pcre_smob, SCM string)
 {
     struct guile_pcre *regexp;
@@ -177,15 +256,17 @@ static SCM guile_pcre_exec(SCM pcre_smob, SCM string)
 		      scm_from_latin1_string("pcre-exec"),
 		      pcre_error_to_string(rc), SCM_EOL, SCM_BOOL_F);
     } else if (rc > 0) {
+	int match_count = rc;
 	int i;
 
-	rv = scm_c_make_vector(rc + 1, SCM_UNSPECIFIED);
+	rv = scm_c_make_vector(match_count + 1, SCM_UNSPECIFIED);
 	scm_c_vector_set_x(rv, 0, string);
-	for (i = 0; i < rc; ++i) {
+	for (i = 0; i < match_count; ++i) {
 	    SCM start = scm_from_signed_integer(captures[i * 2]);
 	    SCM end = scm_from_signed_integer(captures[i * 2 + 1]);
 	    scm_c_vector_set_x(rv, i + 1, scm_cons(start, end));
 	}
+	scm_hashq_set_x(match_regexp_hash_table, rv, pcre_smob);
     }
 
     scm_remember_upto_here_1(pcre_smob);
@@ -285,7 +366,6 @@ static SCM guile_pcre_fullinfo(SCM pcre_smob, SCM what)
 	    /* currently unsupported: */
 	    /* PCRE_INFO_DEFAULT_TABLES */
 	    /* PCRE_INFO_FIRSTTABLE */
-	    /* PCRE_INFO_NAMETABLE */
     switch (parm) {
     case PCRE_INFO_BACKREFMAX:
     case PCRE_INFO_CAPTURECOUNT:
@@ -326,6 +406,9 @@ static SCM guile_pcre_fullinfo(SCM pcre_smob, SCM what)
 	if (rc == 0)
 	    return bool_value == 1 ? SCM_BOOL_T : SCM_BOOL_F;
 	break;
+    case PCRE_INFO_NAMETABLE:
+	return guile_pcre_build_name_alist(regexp);
+	break;
 
     default:
 	scm_error_scm(scm_from_latin1_symbol("pcre-error"),
@@ -355,6 +438,30 @@ static SCM pcre_library_version(void)
 static SCM guile_pcre_version(void)
 {
     return scm_from_latin1_string(PACKAGE_VERSION);
+}
+
+static SCM guile_pcre_set_names(SCM pcre_smob, SCM name_table)
+{
+    struct guile_pcre *regexp;
+
+    scm_assert_smob_type(pcre_tag, pcre_smob);
+    regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
+    regexp->name_table = name_table;
+    return name_table;
+}
+
+static SCM guile_pcre_get_names(SCM pcre_smob)
+{
+    struct guile_pcre *regexp;
+
+    scm_assert_smob_type(pcre_tag, pcre_smob);
+    regexp = (struct guile_pcre *) SCM_SMOB_DATA(pcre_smob);
+    return regexp->name_table;
+}
+
+static SCM guile_pcre_match_to_regexp(SCM match)
+{
+    return scm_hashq_ref(match_regexp_hash_table, match, SCM_BOOL_F);
 }
 
 static int print_pcre(SCM pcre_smob, SCM port, scm_print_state *pstate)
@@ -494,7 +601,9 @@ void init_pcre(void)
 	{ "PCRE_INFO_JCHANGED", PCRE_INFO_JCHANGED, },
 	{ "PCRE_INFO_JIT", PCRE_INFO_JIT, },
 	{ "PCRE_INFO_OKPARTIAL", PCRE_INFO_OKPARTIAL, },
+	{ "PCRE_INFO_NAMETABLE", PCRE_INFO_NAMETABLE, },
     };
+    SCM htref;
     size_t i;
 
     pcre_tag = scm_make_smob_type ("pcre", sizeof(struct guile_pcre));
@@ -510,9 +619,14 @@ void init_pcre(void)
     scm_c_define_gsubr("pcre-get-fullinfo", 2, 0, 0, guile_pcre_fullinfo);
     scm_c_define_gsubr("pcre-version", 0, 0, 0, pcre_library_version);
     scm_c_define_gsubr("guile-pcre-version", 0, 0, 0, guile_pcre_version);
+    scm_c_define_gsubr("pcre-set-names!", 2, 0, 0, guile_pcre_set_names);
+    scm_c_define_gsubr("pcre-names", 1, 0, 0, guile_pcre_get_names);
+    scm_c_define_gsubr("pcre-match->regexp", 1, 0, 0, guile_pcre_match_to_regexp);
     for (i = 0; i < ARRAY_SIZE(symbol_table); ++i) {
 	scm_c_define(symbol_table[i].name, scm_from_int(symbol_table[i].value));
 	scm_c_export(symbol_table[i].name, NULL);
     }
+    htref = scm_c_private_ref("guile-pcre", "pcre-match-regexp-hash-size");
+    match_regexp_hash_table = scm_make_weak_key_hash_table(htref);
     pcre_malloc = scm_malloc;		/* No corresponding scm_free(). */
 }

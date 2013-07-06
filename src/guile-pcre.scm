@@ -1,11 +1,13 @@
 (define-module (guile-pcre)
   #:export (pcre? guile-pcre-version pcre-version
 		  pcre-compile pcre-study pcre-exec
-		  pcre-config)
+		  pcre-config match:named)
   #:export-syntax (make-pcre pcre-fullinfo))
+(use-modules (ice-9 regex))		; for match:substring
 
 (eval-when
  (compile load eval)
+ (define pcre-match-regexp-hash-size 1024)
  (load-extension "libguile-pcre" "init_pcre"))
 
 (define-syntax make-helper
@@ -210,3 +212,26 @@
 (define (pcre-compile pattern . flags)
   (pcre-do-compile pattern flags))
 
+;;; memoize name list -> hash table
+(define (name-hash-table regexp)
+  (let ((name-hash (pcre-names regexp)))
+    (if (hash-table? name-hash) name-hash
+					; convert alist to hash table
+	(let* ((name-list (pcre-get-fullinfo regexp PCRE_INFO_NAMETABLE))
+	       (len (length name-list))
+	       (name-hash (if (> len 0) (make-hash-table (* 2 len)) #f)))
+	  (let loop ((names name-list))
+	    (when (pair? names)
+	      (hashq-set! name-hash (caar names) (cdar names))
+	      (loop (cdr names))))
+	  (pcre-set-names! regexp name-hash)))))
+
+(define (match:named match name)
+  (let* ((regexp (pcre-match->regexp match))
+	 (name-hash (and regexp (name-hash-table regexp)))
+	 (index (and name-hash (hashq-ref name-hash
+					   (if (symbol? name)
+					       name
+					       (string->symbol name))
+					   #f))))
+    (if index (match:substring match index) #f)))

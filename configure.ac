@@ -1,4 +1,4 @@
-AC_INIT([guile-pcre], [0.5], [hdasch@gmail.com])
+AC_INIT([guile-pcre], [0.6], [hdasch@gmail.com])
 
 AC_PREREQ([2.69])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])

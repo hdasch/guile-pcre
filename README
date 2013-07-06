@@ -29,7 +29,6 @@ matcher.  As such there's no support for:
  - pcre_dfa_exec
 
 Partial matching should be supported later.
-Extracting named substrings from match should be supported later.
 
 API
 ---

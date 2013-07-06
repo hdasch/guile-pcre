@@ -37,7 +37,7 @@
 (test-begin "pcre-unit-test")
 (test-assert "pcre?" (pcre? (make-pcre "([[:digit:].]+)abc")))
 (test-assert "pcre-exec "
-	     (pcre-exec (make-pcre "abc" PCRE_CASELESS) "123ABC456"))
+	     (regexp-match? (pcre-exec (make-pcre "abc" PCRE_CASELESS) "123ABC456")))
 
 (test-assert "caseless match "
 	     (match
@@ -92,4 +92,11 @@
 			 "/(?im)abc(?-i)d/"
 			 PCRE_EXTENDED
 			 PCRE_STUDY_JIT_COMPILE)))
+(let ((m (pcre-exec (make-pcre "(?'article'\\w+)\\s+(?'adjective'\\w+)\\s+(?'color'\\w+)\\s+(?'noun'\\w+)\\s+(?'verb'\\w+)") "The quick brown fox jumped")))
+  (test-assert "named-matches"
+              (and (string=? (match:named m 'article) "The")
+		   (string=? (match:named m 'noun) "fox")
+		   (string=? (match:named m 'verb) "jumped")
+		   (not (match:named m 'xxx)))))
+
 (test-end "pcre-unit-test")

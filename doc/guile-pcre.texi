@@ -57,8 +57,7 @@ regarding PCRE, see @uref{http://www.pcre.org/}.
 The objective of guile-pcre is to provide an alternative to the native
 Guile regular expression engine, taking advantage of performance
 improvements and features like named regular expressions inspired by
-Perl's regular expression implementation (though support for named
-regular expressions is not yet implemented).  Where possible guile-pcre
+Perl's regular expression implementation.  Where possible guile-pcre
 attempts to provide a drop-in replacement for Guile's native regular
 expressions.  Specifically, an attempt has been made to generate match
 results that compatible with Guile's native implementation.
@@ -245,9 +244,9 @@ Matching is the process of comparing a regular expression to a string.
 This is performed by the @code{pcre-exec} procedure.  This produces a
 ``match structure'', the same kind of object returned by
 @code{string-match} (part of Guile native regular expression support).
-As such, the Guile procedures @code{match:string},
-@code{match:substring}, @code{match:prefix}, and @code{match:suffix}
-work correctly the the result of @code{pcre-exec}.
+As such, the Guile procedures @code{match:substring},
+@code{match:prefix}, and @code{match:suffix}, etc. work correctly on
+the the result of @code{pcre-exec}.
 
 @deffn {Scheme Procedure} pcre-exec (@var{re} @var{input-string})
 
@@ -259,10 +258,43 @@ structure'' that describes the match.
 (pcre-exec (make-pcre "\\b123") "abc 123 xyz")
 
 @result{} #("abc 123 xyz" (4 . 7))
+@end example
 
+@example
 (pcre-exec (make-pcre "\\b123") "abc123 xyz")
 
 @result{} #f
+@end example
+
+@example
+(regexp-match? (pcre-exec (make-pcre "\\b123") "abc 123 xyz"))
+
+@result{} #t
+@end example
+
+@example
+(match:substring (pcre-exec (make-pcre "\\b(\\d+)") "abc 123 xyz") 1)
+
+@result{} "123"
+@end example
+
+@end deffn
+
+In addition, to support named subgroups as provided in the PCRE
+library, an additional procedure is provided for retrieving matched
+substrings by name.
+
+@deffn {Scheme Procedure} match:named (@var{match} @var{subgroup-name})
+
+Retrieve the substring coresponding to the matched subgroup
+@var{subgroup-name}.
+
+@example
+(let* ((re (make-pcre "(?'article'\\w+)\\s+(?'adjective'\\w+)\\s+(?'color'\\w+)\\s+(?'noun'\\w+)\\s+(?'verb'\\w+)"))
+       (m (pcre-exec re "The quick brown fox jumped")))
+  (match:named m 'verb))
+
+@result{} "jumped"
 @end example
 
 @end deffn
